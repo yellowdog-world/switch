@@ -291,7 +291,7 @@ body {
 .val-blue { color: var(--blue) !important; }
 .val-pink { color: var(--pink) !important; }
 .val-warn { color: var(--accent2) !important; }
-.action-cell { color: #888; max-width: 360px; overflow: hidden; text-overflow: ellipsis; }
+.action-cell { color: #888; white-space: normal; word-break: break-word; }
 
 @media (max-width: 640px) {
   .main { padding: 16px 12px 60px; }
