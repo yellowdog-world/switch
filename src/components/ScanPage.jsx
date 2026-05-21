@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import { fetchPrices } from "../utils/stockCache";
 import { runBacktest } from "../engine/switchEngine";
 import { SCAN_LISTS } from "../data/scanTickers";
@@ -34,12 +34,27 @@ async function scanOne(symbol, from, to, investment, porang) {
   return { symbol, symbolName: data.symbolName || symbol, ...result.summary };
 }
 
+const getInitialParams = () => {
+  const p = new URLSearchParams(window.location.search);
+  if (p.get("mode") === "scan" || !p.get("mode")) {
+    return {
+      period: p.get("period") || "1y",
+      categories: p.get("categories") ? p.get("categories").split(",") : ["us3x"],
+      investment: Number(p.get("investment") || 15000),
+      porang: Number(p.get("porang") || 15),
+    };
+  }
+  return { period: "1y", categories: ["us3x"], investment: 15000, porang: 15 };
+};
+
 export default function ScanPage() {
-  const [period, setPeriod] = useState("1y");
-  const [categories, setCategories] = useState(["us3x"]);
-  const [investment, setInvestment] = useState(15000);
-  const [porang, setPorang] = useState(15);
+  const init = getInitialParams();
+  const [period, setPeriod] = useState(init.period);
+  const [categories, setCategories] = useState(init.categories);
+  const [investment, setInvestment] = useState(init.investment);
+  const [porang, setPorang] = useState(init.porang);
   const [scanning, setScanning] = useState(false);
+  const [copied, setCopied] = useState(false);
   const [progress, setProgress] = useState({ done: 0, total: 0 });
   const [results, setResults] = useState([]);
   const [failCount, setFailCount] = useState(0);
@@ -81,6 +96,15 @@ export default function ScanPage() {
 
   const tickers = [...new Set(categories.flatMap(c => SCAN_LISTS[c].tickers))];
   const pct = progress.total ? Math.round((progress.done / progress.total) * 100) : 0;
+
+  function copyLink() {
+    const params = new URLSearchParams({ mode: "scan", period, categories: categories.join(","), investment, porang });
+    const url = `${window.location.origin}${window.location.pathname}?${params}`;
+    navigator.clipboard.writeText(url).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }
 
   return (
     <section className="scan-section">
@@ -144,6 +168,9 @@ export default function ScanPage() {
               중단
             </button>
           )}
+          <button className="share-btn" onClick={copyLink}>
+            {copied ? "✓ 복사됨" : "🔗 링크 복사"}
+          </button>
         </div>
       </div>
 

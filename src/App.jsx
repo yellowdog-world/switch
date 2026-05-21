@@ -7,7 +7,10 @@ import { runBacktest } from "./engine/switchEngine";
 import { fetchPrices } from "./utils/stockCache";
 
 export default function App() {
-  const [mode, setMode] = useState("backtest");
+  const [mode, setMode] = useState(() => {
+    const p = new URLSearchParams(window.location.search);
+    return p.get("mode") === "backtest" ? "backtest" : "scan";
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [result, setResult] = useState(null);
