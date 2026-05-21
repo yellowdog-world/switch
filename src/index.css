@@ -392,6 +392,7 @@ body {
 .compare-add-btn:hover:not(:disabled) { color: var(--accent); border-color: var(--accent); }
 .compare-add-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 .compare-error { font-size: 11px; color: var(--red); }
+.compare-hint { font-size: 11px; color: var(--muted); }
 
 @media (max-width: 640px) {
   .main { padding: 16px 12px 60px; }

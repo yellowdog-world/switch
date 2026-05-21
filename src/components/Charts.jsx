@@ -169,6 +169,7 @@ function ReturnChart({ data, symbol, symbolName }) {
           </button>
         </div>
         {compareError && <span className="compare-error">{compareError}</span>}
+        <span className="compare-hint">한국 ETF: 종목코드.KS (예: 423920.KS)</span>
       </div>
 
       <ResponsiveContainer width="100%" height={360}>

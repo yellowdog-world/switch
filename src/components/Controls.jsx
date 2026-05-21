@@ -102,6 +102,7 @@ export default function Controls({ onRun, loading }) {
               </button>
             ))}
           </div>
+          <span className="hint">한국 ETF는 종목코드 뒤에 .KS를 붙이세요 (예: 423920.KS)</span>
         </div>
 
         <div className="control-row">
