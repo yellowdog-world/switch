@@ -190,7 +190,7 @@ export default function ScanPage() {
                       {r.symbol}
                     </a>
                   </td>
-                  <td className="scan-name">{r.symbolName}</td>
+                  <td className="scan-name" title={r.symbolName}>{r.symbolName}</td>
                   <td className={r.totalReturn >= 0 ? "val-green" : "val-red"}>
                     {r.totalReturn >= 0 ? "+" : ""}{r.totalReturn.toFixed(2)}%
                   </td>
