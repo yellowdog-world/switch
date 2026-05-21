@@ -1,6 +1,24 @@
 import { useState } from "react";
 
-const POPULAR = ["AAPL", "TSLA", "NVDA", "SPY", "QQQ", "MSFT", "AMZN"];
+//const POPULAR = ["AAPL", "TSLA", "NVDA", "SPY", "QQQ", "MSFT", "AMZN"];
+const POPULAR = ["SOXL", "AAPL", "TSLA", "NVDA", "SPY", "QQQ", "TQQQ"];
+
+const getDefaultDates = () => {
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+  const year = today.getMonth() === 0 ? today.getFullYear() - 1 : today.getFullYear();
+  return {
+    from: `${year}-01-01`,
+    to: yesterday.toISOString().split('T')[0],
+  };
+};
+
+export default function Controls({ onRun, loading }) {
+  const { from: defaultFrom, to: defaultTo } = getDefaultDates();
+  const [symbol, setSymbol] = useState("SOXL");
+  const [from, setFrom] = useState(defaultFrom);
+  const [to, setTo] = useState(defaultTo);
 
 export default function Controls({ onRun, loading }) {
   const [symbol, setSymbol] = useState("AAPL");
