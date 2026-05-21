@@ -12,9 +12,8 @@
  *   lastUpdownPrice - 마지막 업다운 체결가 (W열)
  */
 
-const MAX_PORANG = 15;
-
-export function runBacktest(prices, investmentUSD, startFrom = null) {
+export function runBacktest(prices, investmentUSD, startFrom = null, maxPorang = 15) {
+  const MAX_PORANG = maxPorang;
   const unitAmount = investmentUSD / MAX_PORANG; // 1회 매수금액
 
   // 상태

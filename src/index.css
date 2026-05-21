@@ -118,6 +118,8 @@ body {
   letter-spacing: 0.08em;
 }
 .control-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.investment-row { display: flex; gap: 12px; align-items: flex-start; }
+.control-group-narrow { width: 110px; flex-shrink: 0; }
 .input {
   background: var(--bg3);
   border: 1px solid var(--border2);

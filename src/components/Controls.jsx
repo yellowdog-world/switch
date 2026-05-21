@@ -32,6 +32,7 @@ const getInitialValues = () => {
       from: params.get("from") ?? defaultFrom,
       to: params.get("to") ?? defaultTo,
       investment: Number(params.get("investment") ?? 15000),
+      porang: Number(params.get("porang") ?? 15),
       fromUrl: true,
     };
   }
@@ -52,13 +53,14 @@ export default function Controls({ onRun, loading }) {
   const [from, setFrom] = useState(initial.from);
   const [to, setTo] = useState(initial.to);
   const [investment, setInvestment] = useState(initial.investment);
+  const [porang, setPorang] = useState(initial.porang ?? 15);
   const [copied, setCopied] = useState(false);
 
   // URL 파라미터로 열린 경우 자동 실행 (최초 1회)
   const [autoRan, setAutoRan] = useState(false);
   if (initial.fromUrl && !autoRan && !loading) {
     setAutoRan(true);
-    setTimeout(() => onRun({ symbol: initial.symbol, from: initial.from, to: initial.to, investment: initial.investment }), 0);
+    setTimeout(() => onRun({ symbol: initial.symbol, from: initial.from, to: initial.to, investment: initial.investment, porang: initial.porang ?? 15 }), 0);
   }
 
   const update = (field, value) => {
@@ -68,10 +70,11 @@ export default function Controls({ onRun, loading }) {
     if (field === "from") setFrom(value);
     if (field === "to") setTo(value);
     if (field === "investment") setInvestment(value);
+    if (field === "porang") setPorang(value);
   };
 
   const copyLink = () => {
-    const params = new URLSearchParams({ symbol, from, to, investment });
+    const params = new URLSearchParams({ symbol, from, to, investment, porang });
     const url = `${window.location.origin}${window.location.pathname}?${params}`;
     navigator.clipboard.writeText(url).then(() => {
       setCopied(true);
@@ -82,7 +85,7 @@ export default function Controls({ onRun, loading }) {
   function handleSubmit(e) {
     e.preventDefault();
     if (!symbol || !from || !to || !investment) return;
-    onRun({ symbol: symbol.toUpperCase(), from, to, investment: Number(investment) });
+    onRun({ symbol: symbol.toUpperCase(), from, to, investment: Number(investment), porang: Number(porang) });
   }
 
   return (
@@ -151,20 +154,36 @@ export default function Controls({ onRun, loading }) {
         </div>
 
         <div className="control-group">
-          <label>투자금 (USD)</label>
-          <div className="input-prefix-wrap">
-            <span className="input-prefix">$</span>
-            <input
-              className="input input-prefixed"
-              type="number"
-              value={investment}
-              onChange={e => update("investment", e.target.value)}
-              min={1500}
-              step={100}
-              required
-            />
+          <div className="investment-row">
+            <div className="control-group" style={{ flex: 1 }}>
+              <label>투자금 (USD)</label>
+              <div className="input-prefix-wrap">
+                <span className="input-prefix">$</span>
+                <input
+                  className="input input-prefixed"
+                  type="number"
+                  value={investment}
+                  onChange={e => update("investment", e.target.value)}
+                  min={1500}
+                  step={100}
+                  required
+                />
+              </div>
+            </div>
+            <div className="control-group control-group-narrow">
+              <label>분할 수 (포랭)</label>
+              <input
+                className="input"
+                type="number"
+                value={porang}
+                onChange={e => update("porang", Math.max(1, Math.min(30, Number(e.target.value))))}
+                min={1}
+                max={30}
+                required
+              />
+            </div>
           </div>
-          <div className="hint">1회 매수금액: ${(investment / 15).toFixed(0)}</div>
+          <div className="hint">1회 매수금액: ${Math.floor(investment / porang).toLocaleString()}</div>
         </div>
 
         <div className="controls-actions">

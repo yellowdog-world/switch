@@ -11,7 +11,7 @@ export default function App() {
   const [result, setResult] = useState(null);
   const [params, setParams] = useState(null);
 
-  async function handleRun({ symbol, from, to, investment }) {
+  async function handleRun({ symbol, from, to, investment, porang = 15 }) {
     setLoading(true);
     setError(null);
     setResult(null);
@@ -27,10 +27,10 @@ export default function App() {
         throw new Error("해당 기간 데이터가 부족합니다.");
 
       // from을 넘겨 lookback 데이터는 어제종가 확보용으로만 쓰고 시뮬레이션은 from부터 시작
-      const backtestResult = runBacktest(data.prices, investment, from);
+      const backtestResult = runBacktest(data.prices, investment, from, porang);
 
       setResult(backtestResult);
-      setParams({ symbol, symbolName: data.symbolName || symbol, from, to, investment });
+      setParams({ symbol, symbolName: data.symbolName || symbol, from, to, investment, porang });
     } catch (e) {
       setError(e.message);
     } finally {
