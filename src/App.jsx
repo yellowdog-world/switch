@@ -2,10 +2,12 @@ import { useState } from "react";
 import Controls from "./components/Controls";
 import Charts from "./components/Charts";
 import Summary from "./components/Summary";
+import ScanPage from "./components/ScanPage";
 import { runBacktest } from "./engine/switchEngine";
 import { fetchPrices } from "./utils/stockCache";
 
 export default function App() {
+  const [mode, setMode] = useState("backtest");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [result, setResult] = useState(null);
@@ -42,36 +44,48 @@ export default function App() {
     <div className="app">
       <header className="header">
         <div className="header-inner">
-          <div className="logo">
-            <span className="logo-mark">S</span>
-            <div>
-              <div className="logo-title">YELLOWDOG METHOD</div>
-              <div className="logo-sub">Backtest Engine</div>
+          <div className="header-top">
+            <div className="logo">
+              <span className="logo-mark">S</span>
+              <div>
+                <div className="logo-title">YELLOWDOG METHOD</div>
+                <div className="logo-sub">Backtest Engine</div>
+              </div>
             </div>
+            <nav className="main-nav">
+              <button className={`nav-btn ${mode === "backtest" ? "nav-active" : ""}`} onClick={() => setMode("backtest")}>백테스트</button>
+              <button className={`nav-btn ${mode === "scan" ? "nav-active" : ""}`} onClick={() => setMode("scan")}>종목 스캔</button>
+            </nav>
           </div>
         </div>
       </header>
 
       <main className="main">
-        <Controls onRun={handleRun} loading={loading} />
+        {mode === "scan" && <ScanPage />}
 
-        {error && (
-          <div className="error-box">
-            <span className="error-icon">⚠</span> {error}
-          </div>
-        )}
-
-        {loading && (
-          <div className="loading-box">
-            <div className="spinner" />
-            <span>데이터 로딩 및 시뮬레이션 중...</span>
-          </div>
-        )}
-
-        {result && params && (
+        {mode === "backtest" && (
           <>
-            <Summary summary={result.summary} params={params} />
-            <Charts dailyLog={result.dailyLog} cycles={result.cycles} symbol={params.symbol} symbolName={params.symbolName} />
+            <Controls onRun={handleRun} loading={loading} />
+
+            {error && (
+              <div className="error-box">
+                <span className="error-icon">⚠</span> {error}
+              </div>
+            )}
+
+            {loading && (
+              <div className="loading-box">
+                <div className="spinner" />
+                <span>데이터 로딩 및 시뮬레이션 중...</span>
+              </div>
+            )}
+
+            {result && params && (
+              <>
+                <Summary summary={result.summary} params={params} />
+                <Charts dailyLog={result.dailyLog} cycles={result.cycles} symbol={params.symbol} symbolName={params.symbolName} />
+              </>
+            )}
           </>
         )}
       </main>
