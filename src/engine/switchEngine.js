@@ -62,33 +62,36 @@ export function runBacktest(prices, investmentUSD, startFrom = null) {
     let updownSell = false;
     let tteobBuy = false;
     let tteobSells = [];
+    const rankCountBefore = rankBundles.length; // 오늘 새로 산 떨법 묶음 구분용
 
     // ── 1. 업다운 매수 ──────────────────────────────
     if (porang < MAX_PORANG && lp !== null) {
       if (lastUpdownPrice === null) {
         // 최초 진입: 어제 종가 대비 10% 이내 (급등 제외)
         if (today.close <= yesterday.close * 1.10) {
-          const shares = unitAmount / today.close;
+          const shares = Math.floor(unitAmount / today.close);
+          const spent = shares * today.close;
           totalShares += shares;
-          cash -= unitAmount;
+          cash -= spent;
           lastUpdownPrice = today.close;
           lp = today.close;
           port += 1;
           updownBuy = true;
-          action.push(`업다운 매수 (첫날) @${today.close.toFixed(2)}`);
+          action.push(`업다운 매수 (첫날) ${shares}주 @${today.close.toFixed(2)}`);
         }
       } else {
         // 추가 매수: LP × (1 - 0.2% × 포랭) 이하
         const threshold = lp * (1 - 0.002 * porang);
         if (today.close <= threshold) {
-          const shares = unitAmount / today.close;
+          const shares = Math.floor(unitAmount / today.close);
+          const spent = shares * today.close;
           totalShares += shares;
-          cash -= unitAmount;
+          cash -= spent;
           lastUpdownPrice = today.close;
           lp = today.close;
           port += 1;
           updownBuy = true;
-          action.push(`업다운 매수 (${porang + 1}차) @${today.close.toFixed(2)}`);
+          action.push(`업다운 매수 (${porang + 1}차) ${shares}주 @${today.close.toFixed(2)}`);
         }
       }
     }
@@ -97,7 +100,7 @@ export function runBacktest(prices, investmentUSD, startFrom = null) {
     // 매수와 같은 날 매도는 하지 않음
     if (!updownBuy && port > 0 && lp !== null && today.close >= lp) {
       const currentPorang = port + rankBundles.length;
-      const sellShares = totalShares / currentPorang;
+      const sellShares = Math.floor(totalShares / currentPorang);
       const sellAmount = sellShares * today.close;
       totalShares -= sellShares;
       cash += sellAmount;
@@ -105,30 +108,35 @@ export function runBacktest(prices, investmentUSD, startFrom = null) {
       lp = today.close;
       port -= 1;
       updownSell = true;
-      action.push(`업다운 매도 (${sellShares.toFixed(1)}주) @${today.close.toFixed(2)}`);
+      action.push(`업다운 매도 (${sellShares}주) @${today.close.toFixed(2)}`);
     }
 
     // ── 3. 떨법 매수 ──────────────────────────────
+    // 조건: 하락일 + 오늘종가 ≤ 어제종가-0.01
+    // 매입가: 실제 체결 기준인 오늘 종가 (지정가 아닌 종가 기준)
     const newPorang = port + rankBundles.length;
     if (yesterday && today.close < yesterday.close && newPorang < MAX_PORANG) {
       const orderPrice = yesterday.close - 0.01;
       if (today.close <= orderPrice) {
-        const shares = unitAmount / orderPrice;
-        rankBundles.push({ buyPrice: orderPrice, shares, amount: unitAmount });
-        cash -= unitAmount;
+        const shares = Math.floor(unitAmount / today.close);
+        const spent = shares * today.close;
+        rankBundles.push({ buyPrice: today.close, shares, amount: spent });
+        cash -= spent;
         tteobBuy = true;
-        action.push(`떨법 매수 @${orderPrice.toFixed(2)} (랭크${rankBundles.length})`);
+        action.push(`떨법 매수 ${shares}주 @${today.close.toFixed(2)} (랭크${rankBundles.length})`);
       }
     }
 
-    // ── 4. 떨법 매도 ──────────────────────────────
+    // ── 4. 떨법 매도 ── (오늘 새로 산 묶음은 당일 매도 제외)
     const remaining = [];
-    for (const bundle of rankBundles) {
-      if (today.close >= bundle.buyPrice) {
+    for (let bi = 0; bi < rankBundles.length; bi++) {
+      const bundle = rankBundles[bi];
+      const isTodayBought = bi >= rankCountBefore;
+      if (!isTodayBought && today.close >= bundle.buyPrice) {
         const sellAmount = bundle.shares * today.close;
         cash += sellAmount;
         tteobSells.push(bundle);
-        action.push(`떨법 매도 (랭크청산) @${today.close.toFixed(2)} 매입가${bundle.buyPrice.toFixed(2)}`);
+        action.push(`떨법 매도 ${bundle.shares}주 @${today.close.toFixed(2)} (매입 @${bundle.buyPrice.toFixed(2)})`);
       } else {
         remaining.push(bundle);
       }
