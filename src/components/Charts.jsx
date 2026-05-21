@@ -48,8 +48,9 @@ function ReturnChart({ data }) {
         <XAxis dataKey="date" tick={{ fill: "#888", fontSize: 11 }} tickLine={false} interval="preserveStartEnd" />
         <YAxis tick={{ fill: "#888", fontSize: 11 }} tickLine={false} tickFormatter={v => `${v.toFixed(1)}%`} />
         <Tooltip
-          contentStyle={{ background: "#1a1a2e", border: "1px solid #333", borderRadius: 8 }}
+          contentStyle={{ background: "#1a1a2e", border: "1px solid #333", borderRadius: 8, color: "#e0e0e0" }}
           labelStyle={{ color: "#aaa" }}
+          itemStyle={{ color: "#e0e0e0" }}
           formatter={(v) => [`${v.toFixed(2)}%`, "수익률"]}
         />
         <ReferenceLine y={0} stroke="#444" strokeDasharray="4 4" />
@@ -75,8 +76,9 @@ function PorangChart({ data }) {
         <YAxis yAxisId="left" tick={{ fill: "#888", fontSize: 11 }} tickLine={false} />
         <YAxis yAxisId="right" orientation="right" tick={{ fill: "#888", fontSize: 11 }} tickLine={false} tickFormatter={v => `$${v.toFixed(0)}`} />
         <Tooltip
-          contentStyle={{ background: "#1a1a2e", border: "1px solid #333", borderRadius: 8 }}
+          contentStyle={{ background: "#1a1a2e", border: "1px solid #333", borderRadius: 8, color: "#e0e0e0" }}
           labelStyle={{ color: "#aaa" }}
+          itemStyle={{ color: "#e0e0e0" }}
         />
         <Legend wrapperStyle={{ color: "#aaa", fontSize: 12 }} />
         <Line yAxisId="left" type="stepAfter" dataKey="porang" stroke="#f59e0b" strokeWidth={2} dot={false} name="포랭" />
@@ -104,8 +106,9 @@ function CycleChart({ cycles }) {
         />
         <YAxis tick={{ fill: "#888", fontSize: 11 }} tickLine={false} tickFormatter={v => `${v.toFixed(1)}%`} />
         <Tooltip
-          contentStyle={{ background: "#1a1a2e", border: "1px solid #333", borderRadius: 8 }}
+          contentStyle={{ background: "#1a1a2e", border: "1px solid #333", borderRadius: 8, color: "#e0e0e0" }}
           labelStyle={{ color: "#aaa" }}
+          itemStyle={{ color: "#e0e0e0" }}
           formatter={(v, name, props) => [
             `${v.toFixed(2)}%${props.payload.dong ? " ⚠️똥" : ""}`,
             "수익률"
