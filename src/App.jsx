@@ -56,8 +56,8 @@ export default function App() {
               </div>
             </div>
             <nav className="main-nav">
-              <button className={`nav-btn ${mode === "backtest" ? "nav-active" : ""}`} onClick={() => setMode("backtest")}>백테스트</button>
               <button className={`nav-btn ${mode === "scan" ? "nav-active" : ""}`} onClick={() => setMode("scan")}>종목 스캔</button>
+              <button className={`nav-btn ${mode === "backtest" ? "nav-active" : ""}`} onClick={() => setMode("backtest")}>백테스트</button>
             </nav>
           </div>
         </div>

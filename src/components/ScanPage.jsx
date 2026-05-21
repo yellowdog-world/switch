@@ -7,7 +7,10 @@ const PERIODS = [
   { key: "3m", label: "3개월" },
   { key: "6m", label: "6개월" },
   { key: "1y", label: "1년" },
+  { key: "2y", label: "2년" },
   { key: "3y", label: "3년" },
+  { key: "5y", label: "5년" },
+  { key: "10y", label: "10년" },
 ];
 
 const toKSTDateStr = (date) => {
@@ -21,7 +24,10 @@ function getPeriodDates(key) {
   if (key === "3m") from.setMonth(from.getMonth() - 3);
   if (key === "6m") from.setMonth(from.getMonth() - 6);
   if (key === "1y") from.setFullYear(from.getFullYear() - 1);
+  if (key === "2y") from.setFullYear(from.getFullYear() - 2);
   if (key === "3y") from.setFullYear(from.getFullYear() - 3);
+  if (key === "5y") from.setFullYear(from.getFullYear() - 5);
+  if (key === "10y") from.setFullYear(from.getFullYear() - 10);
   return { from: toKSTDateStr(from), to: toKSTDateStr(to) };
 }
 
@@ -34,17 +40,23 @@ async function scanOne(symbol, from, to, investment, porang) {
   return { symbol, symbolName: data.symbolName || symbol, ...result.summary };
 }
 
+const DEFAULT_USD = 15000;
+const DEFAULT_KRW = 15000000;
+const isKoreanOnly = (cats) => cats.length > 0 && cats.every(c => c === "kr");
+const defaultInvestmentFor = (cats) => isKoreanOnly(cats) ? DEFAULT_KRW : DEFAULT_USD;
+
 const getInitialParams = () => {
   const p = new URLSearchParams(window.location.search);
   if (p.get("mode") === "scan" || !p.get("mode")) {
+    const cats = p.get("categories") ? p.get("categories").split(",") : ["us3x"];
     return {
       period: p.get("period") || "1y",
-      categories: p.get("categories") ? p.get("categories").split(",") : ["us3x"],
-      investment: Number(p.get("investment") || 15000),
+      categories: cats,
+      investment: Number(p.get("investment") || defaultInvestmentFor(cats)),
       porang: Number(p.get("porang") || 15),
     };
   }
-  return { period: "1y", categories: ["us3x"], investment: 15000, porang: 15 };
+  return { period: "1y", categories: ["us3x"], investment: DEFAULT_USD, porang: 15 };
 };
 
 export default function ScanPage() {
@@ -130,11 +142,16 @@ export default function ScanPage() {
             {Object.entries(SCAN_LISTS).map(([key, val]) => (
               <button key={key}
                 className={`chip ${categories.includes(key) ? "chip-active" : ""}`}
-                onClick={() => setCategories(prev =>
-                  prev.includes(key)
-                    ? prev.length > 1 ? prev.filter(c => c !== key) : prev
-                    : [...prev, key]
-                )}
+                onClick={() => {
+                  setCategories(prev => {
+                    const next = prev.includes(key)
+                      ? prev.length > 1 ? prev.filter(c => c !== key) : prev
+                      : [...prev, key];
+                    if (isKoreanOnly(next)) setInvestment(DEFAULT_KRW);
+                    else if (isKoreanOnly(prev)) setInvestment(DEFAULT_USD);
+                    return next;
+                  });
+                }}
                 disabled={scanning}>{val.label}</button>
             ))}
           </div>
@@ -144,10 +161,12 @@ export default function ScanPage() {
           <span className="scan-label">투자금 / 분할</span>
           <div className="investment-row">
             <div className="input-prefix-wrap" style={{ flex: 1 }}>
-              <span className="input-prefix">$</span>
+              <span className="input-prefix">{isKoreanOnly(categories) ? "₩" : "$"}</span>
               <input className="input input-prefixed" type="number" value={investment}
                 onChange={e => setInvestment(Number(e.target.value))}
-                min={1500} step={100} disabled={scanning} />
+                min={isKoreanOnly(categories) ? 150000 : 1500}
+                step={isKoreanOnly(categories) ? 10000 : 100}
+                disabled={scanning || isKoreanOnly(categories)} />
             </div>
             <span className="investment-divider">÷</span>
             <input className="input porang-input" type="number" value={porang}
@@ -155,7 +174,7 @@ export default function ScanPage() {
               min={1} max={30} disabled={scanning} />
             <span className="investment-unit">분할</span>
           </div>
-          <span className="hint">1회 매수금액: ${Math.floor(investment / porang).toLocaleString()}</span>
+          <span className="hint">1회 매수금액: {isKoreanOnly(categories) ? "₩" : "$"}{Math.floor(investment / porang).toLocaleString()}</span>
         </div>
 
         <div className="scan-actions">
@@ -221,7 +240,7 @@ export default function ScanPage() {
                   <td className={r.totalReturn >= 0 ? "val-green" : "val-red"}>
                     {r.totalReturn >= 0 ? "+" : ""}{r.totalReturn.toFixed(2)}%
                   </td>
-                  <td>${r.finalValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
+                  <td>{r.symbol.endsWith(".KS") ? "₩" : "$"}{r.finalValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
                   <td className="val-red">-{r.maxDrawdown.toFixed(2)}%</td>
                   <td>{r.totalCycles}</td>
                   <td className={r.dongCount > 0 ? "val-warn" : ""}>{r.dongCount}</td>

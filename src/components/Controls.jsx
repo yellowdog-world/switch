@@ -15,7 +15,10 @@ const PERIODS = [
   { key: "3m", label: "3개월" },
   { key: "6m", label: "6개월" },
   { key: "1y", label: "1년" },
+  { key: "2y", label: "2년" },
   { key: "3y", label: "3년" },
+  { key: "5y", label: "5년" },
+  { key: "10y", label: "10년" },
 ];
 
 const toKSTDateStr = (date) => {
@@ -40,20 +43,29 @@ const calcPeriodDates = (key) => {
   if (key === "3m") from.setMonth(from.getMonth() - 3);
   if (key === "6m") from.setMonth(from.getMonth() - 6);
   if (key === "1y") from.setFullYear(from.getFullYear() - 1);
+  if (key === "2y") from.setFullYear(from.getFullYear() - 2);
   if (key === "3y") from.setFullYear(from.getFullYear() - 3);
+  if (key === "5y") from.setFullYear(from.getFullYear() - 5);
+  if (key === "10y") from.setFullYear(from.getFullYear() - 10);
   return { from: toKSTDateStr(from), to: toStr };
 };
+
+const DEFAULT_USD = 15000;
+const DEFAULT_KRW = 15000000;
+const isKoreanSymbol = (sym) => sym.endsWith(".KS");
+const defaultInvestmentFor = (sym) => isKoreanSymbol(sym) ? DEFAULT_KRW : DEFAULT_USD;
 
 const getInitialValues = () => {
   const { from: defaultFrom, to: defaultTo } = getDefaultDates();
   // URL 파라미터 우선, 없으면 localStorage, 없으면 기본값
   const params = new URLSearchParams(window.location.search);
   if (params.get("symbol")) {
+    const sym = params.get("symbol");
     return {
-      symbol: params.get("symbol"),
+      symbol: sym,
       from: params.get("from") ?? defaultFrom,
       to: params.get("to") ?? defaultTo,
-      investment: Number(params.get("investment") ?? 15000),
+      investment: Number(params.get("investment") ?? defaultInvestmentFor(sym)),
       porang: Number(params.get("porang") ?? 15),
       fromUrl: true,
     };
@@ -62,7 +74,7 @@ const getInitialValues = () => {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) return { ...JSON.parse(saved), fromUrl: false };
   } catch {}
-  return { symbol: "SOXL", from: defaultFrom, to: defaultTo, investment: 15000, fromUrl: false };
+  return { symbol: "SOXL", from: defaultFrom, to: defaultTo, investment: DEFAULT_USD, fromUrl: false };
 };
 
 const saveValues = (values) => {
@@ -86,9 +98,19 @@ export default function Controls({ onRun, loading }) {
   }
 
   const update = (field, value) => {
-    const next = { symbol, from, to, investment, porang, [field]: value };
+    let nextInvestment = investment;
+    if (field === "symbol") {
+      const wasKorean = isKoreanSymbol(symbol);
+      const willBeKorean = isKoreanSymbol(value);
+      if (wasKorean !== willBeKorean) {
+        const prevDefault = wasKorean ? DEFAULT_KRW : DEFAULT_USD;
+        if (investment === prevDefault) nextInvestment = willBeKorean ? DEFAULT_KRW : DEFAULT_USD;
+      }
+    }
+    const next = { symbol, from, to, investment: nextInvestment, porang, [field]: value };
+    if (field !== "investment") next.investment = nextInvestment;
     saveValues(next);
-    if (field === "symbol") setSymbol(value);
+    if (field === "symbol") { setSymbol(value); if (nextInvestment !== investment) setInvestment(nextInvestment); }
     if (field === "from") setFrom(value);
     if (field === "to") setTo(value);
     if (field === "investment") setInvestment(value);
@@ -198,17 +220,17 @@ export default function Controls({ onRun, loading }) {
         </div>
 
         <div className="control-group">
-          <label>투자금 (USD)</label>
+          <label>투자금 ({isKoreanSymbol(symbol) ? "KRW" : "USD"})</label>
           <div className="investment-row">
             <div className="input-prefix-wrap" style={{ flex: 1 }}>
-              <span className="input-prefix">$</span>
+              <span className="input-prefix">{isKoreanSymbol(symbol) ? "₩" : "$"}</span>
               <input
                 className="input input-prefixed"
                 type="number"
                 value={investment}
                 onChange={e => update("investment", e.target.value)}
-                min={1500}
-                step={100}
+                min={isKoreanSymbol(symbol) ? 150000 : 1500}
+                step={isKoreanSymbol(symbol) ? 10000 : 100}
                 required
               />
             </div>
@@ -225,7 +247,7 @@ export default function Controls({ onRun, loading }) {
             />
             <span className="investment-unit">분할</span>
           </div>
-          <div className="hint">1회 매수금액: ${Math.floor(investment / porang).toLocaleString()}</div>
+          <div className="hint">1회 매수금액: {isKoreanSymbol(symbol) ? "₩" : "$"}{Math.floor(investment / porang).toLocaleString()}</div>
         </div>
 
         <div className="controls-actions">
