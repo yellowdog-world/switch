@@ -43,7 +43,7 @@ export default function App() {
           <div className="logo">
             <span className="logo-mark">S</span>
             <div>
-              <div className="logo-title">SWITCH METHOD</div>
+              <div className="logo-title">YELLOWDOG METHOD</div>
               <div className="logo-sub">Backtest Engine</div>
             </div>
           </div>
