@@ -77,7 +77,7 @@ export function runBacktest(prices, investmentUSD, startFrom = null) {
           lp = today.close;
           port += 1;
           updownBuy = true;
-          action.push(`업다운 매수 (첫날) ${shares}주 @${today.close.toFixed(2)}`);
+          action.push(`업다운 매수 (첫날) @${today.close.toFixed(2)}(${shares}주)`);
         }
       } else {
         // 추가 매수: LP × (1 - 0.2% × 포랭) 이하
@@ -91,7 +91,7 @@ export function runBacktest(prices, investmentUSD, startFrom = null) {
           lp = today.close;
           port += 1;
           updownBuy = true;
-          action.push(`업다운 매수 (${porang + 1}차) ${shares}주 @${today.close.toFixed(2)}`);
+          action.push(`업다운 매수 (${porang + 1}차) @${today.close.toFixed(2)}(${shares}주)`);
         }
       }
     }
@@ -108,7 +108,7 @@ export function runBacktest(prices, investmentUSD, startFrom = null) {
       lp = today.close;
       port -= 1;
       updownSell = true;
-      action.push(`업다운 매도 (${sellShares}주) @${today.close.toFixed(2)}`);
+      action.push(`업다운 매도 @${today.close.toFixed(2)}(${sellShares}주)`);
     }
 
     // ── 3. 떨법 매수 ──────────────────────────────
@@ -123,7 +123,7 @@ export function runBacktest(prices, investmentUSD, startFrom = null) {
         rankBundles.push({ buyPrice: today.close, shares, amount: spent });
         cash -= spent;
         tteobBuy = true;
-        action.push(`떨법 매수 ${shares}주 @${today.close.toFixed(2)} (랭크${rankBundles.length})`);
+        action.push(`떨법 매수 @${today.close.toFixed(2)}(${shares}주) (랭크${rankBundles.length})`);
       }
     }
 
@@ -136,7 +136,7 @@ export function runBacktest(prices, investmentUSD, startFrom = null) {
         const sellAmount = bundle.shares * today.close;
         cash += sellAmount;
         tteobSells.push(bundle);
-        action.push(`떨법 매도 ${bundle.shares}주 @${today.close.toFixed(2)} (매입 @${bundle.buyPrice.toFixed(2)})`);
+        action.push(`떨법 매도 @${today.close.toFixed(2)}(${bundle.shares}주) (매입 @${bundle.buyPrice.toFixed(2)})`);
       } else {
         remaining.push(bundle);
       }
