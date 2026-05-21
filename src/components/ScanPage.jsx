@@ -178,7 +178,18 @@ export default function ScanPage() {
               {results.map((r, i) => (
                 <tr key={r.symbol} className={i === 0 ? "row-rank-top" : ""}>
                   <td className="scan-rank">{i + 1}</td>
-                  <td><span className="scan-symbol">{r.symbol}</span></td>
+                  <td>
+                    <a
+                      className="scan-symbol"
+                      href={r.symbol.endsWith(".KS")
+                        ? `https://finance.naver.com/item/main.naver?code=${r.symbol.replace(".KS", "")}`
+                        : `https://finance.yahoo.com/quote/${r.symbol}`}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      {r.symbol}
+                    </a>
+                  </td>
                   <td className="scan-name">{r.symbolName}</td>
                   <td className={r.totalReturn >= 0 ? "val-green" : "val-red"}>
                     {r.totalReturn >= 0 ? "+" : ""}{r.totalReturn.toFixed(2)}%
