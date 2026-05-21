@@ -317,6 +317,75 @@ body {
 .cycle-pos { background: rgba(52,211,153,0.15); color: var(--green); }
 .cycle-neg { background: rgba(248,113,113,0.15); color: var(--red); }
 
+/* ── Chart Legend / Compare ── */
+.chart-legend-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.legend-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 100px;
+  border: 1px solid var(--border2);
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.15s;
+  user-select: none;
+}
+.legend-on { border-color: var(--chip-color); color: var(--chip-color); }
+.legend-off { opacity: 0.4; }
+.legend-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--muted);
+  flex-shrink: 0;
+}
+.legend-remove {
+  background: none; border: none;
+  color: inherit; cursor: pointer;
+  font-size: 14px; line-height: 1;
+  padding: 0 0 0 2px; opacity: 0.6;
+}
+.legend-remove:hover { opacity: 1; }
+.compare-input-wrap { display: flex; align-items: center; gap: 4px; }
+.compare-input {
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  padding: 4px 10px;
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  outline: none;
+  width: 140px;
+  transition: border-color 0.2s;
+}
+.compare-input:focus { border-color: var(--accent); }
+.compare-input:disabled { opacity: 0.4; }
+.compare-add-btn {
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  padding: 4px 10px;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.15s;
+  line-height: 1;
+}
+.compare-add-btn:hover:not(:disabled) { color: var(--accent); border-color: var(--accent); }
+.compare-add-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.compare-error { font-size: 11px; color: var(--red); }
+
 @media (max-width: 640px) {
   .main { padding: 16px 12px 60px; }
   .control-row { grid-template-columns: 1fr; }
