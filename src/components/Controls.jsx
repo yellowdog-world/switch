@@ -4,10 +4,10 @@ const POPULAR_US = ["SOXL", "AAPL", "TSLA", "NVDA", "SPY", "QQQ", "TQQQ"];
 
 const POPULAR_KR = [
   { symbol: "122630.KS", label: "KODEX 레버리지" },
-  { symbol: "409820.KS", label: "KODEX 나스닥100레버리지" },
-  { symbol: "261220.KS", label: "KODEX S&P500레버리지" },
-  { symbol: "494310.KS", label: "TIGER 필라델피아반도체레버리지" },
-  { symbol: "48808.KS",  label: "TIGER 반도체TOP10레버리지" },
+  { symbol: "409820.KS", label: "KODEX 미국나스닥100레버리지" },
+  { symbol: "423920.KS", label: "TIGER 미국필라델피아반도체레버리지(합성)" },
+  { symbol: "494310.KS", label: "KODEX 반도체레버리지" },
+  { symbol: "488080.KS", label: "TIGER 반도체TOP10레버리지" },
 ];
 const STORAGE_KEY = "yd_controls";
 
