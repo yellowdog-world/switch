@@ -7,7 +7,7 @@ import { useState } from "react";
 import DailyTable from "./DailyTable";
 
 export default function Charts({ dailyLog, cycles }) {
-  const [tab, setTab] = useState("return");
+  const [tab, setTab] = useState("daily");
 
   // 날짜 샘플링 (너무 많으면 느림)
   const sampled = sampleData(dailyLog, 300);
