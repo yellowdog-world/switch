@@ -1,6 +1,5 @@
 import { useState } from "react";
 
-//const POPULAR = ["AAPL", "TSLA", "NVDA", "SPY", "QQQ", "MSFT", "AMZN"];
 const POPULAR = ["SOXL", "AAPL", "TSLA", "NVDA", "SPY", "QQQ", "TQQQ"];
 
 const getDefaultDates = () => {
@@ -19,11 +18,6 @@ export default function Controls({ onRun, loading }) {
   const [symbol, setSymbol] = useState("SOXL");
   const [from, setFrom] = useState(defaultFrom);
   const [to, setTo] = useState(defaultTo);
-
-export default function Controls({ onRun, loading }) {
-  const [symbol, setSymbol] = useState("AAPL");
-  const [from, setFrom] = useState("2022-01-01");
-  const [to, setTo] = useState("2024-12-31");
   const [investment, setInvestment] = useState(15000);
 
   function handleSubmit(e) {
@@ -42,7 +36,7 @@ export default function Controls({ onRun, loading }) {
             className="input"
             value={symbol}
             onChange={e => setSymbol(e.target.value.toUpperCase())}
-            placeholder="예: AAPL"
+            placeholder="예: SOXL"
             required
           />
           <div className="quick-symbols">
