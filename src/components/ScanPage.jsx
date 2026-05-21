@@ -35,7 +35,7 @@ async function scanOne(symbol, from, to, investment, porang) {
 
 export default function ScanPage() {
   const [period, setPeriod] = useState("1y");
-  const [category, setCategory] = useState("us3x");
+  const [categories, setCategories] = useState(["us3x"]);
   const [investment, setInvestment] = useState(15000);
   const [porang, setPorang] = useState(15);
   const [scanning, setScanning] = useState(false);
@@ -46,7 +46,7 @@ export default function ScanPage() {
 
   async function runScan() {
     abortRef.current = false;
-    const tickers = SCAN_LISTS[category].tickers;
+    const tickers = [...new Set(categories.flatMap(c => SCAN_LISTS[c].tickers))];
     setScanning(true);
     setResults([]);
     setFailCount(0);
@@ -78,7 +78,7 @@ export default function ScanPage() {
     setScanning(false);
   }
 
-  const tickers = SCAN_LISTS[category].tickers;
+  const tickers = [...new Set(categories.flatMap(c => SCAN_LISTS[c].tickers))];
   const pct = progress.total ? Math.round((progress.done / progress.total) * 100) : 0;
 
   return (
@@ -103,8 +103,14 @@ export default function ScanPage() {
           <span className="scan-label">카테고리</span>
           <div className="scan-chips">
             {Object.entries(SCAN_LISTS).map(([key, val]) => (
-              <button key={key} className={`chip ${category === key ? "chip-active" : ""}`}
-                onClick={() => setCategory(key)} disabled={scanning}>{val.label}</button>
+              <button key={key}
+                className={`chip ${categories.includes(key) ? "chip-active" : ""}`}
+                onClick={() => setCategories(prev =>
+                  prev.includes(key)
+                    ? prev.length > 1 ? prev.filter(c => c !== key) : prev
+                    : [...prev, key]
+                )}
+                disabled={scanning}>{val.label}</button>
             ))}
           </div>
         </div>
