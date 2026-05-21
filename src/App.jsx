@@ -2,7 +2,6 @@ import { useState } from "react";
 import Controls from "./components/Controls";
 import Charts from "./components/Charts";
 import Summary from "./components/Summary";
-import DailyTable from "./components/DailyTable";
 import { runBacktest } from "./engine/switchEngine";
 
 export default function App() {
@@ -70,7 +69,6 @@ export default function App() {
           <>
             <Summary summary={result.summary} params={params} />
             <Charts dailyLog={result.dailyLog} cycles={result.cycles} />
-            <DailyTable dailyLog={result.dailyLog} />
           </>
         )}
       </main>

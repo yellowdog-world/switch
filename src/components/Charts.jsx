@@ -4,6 +4,7 @@ import {
   ResponsiveContainer, ReferenceLine, Legend, Cell
 } from "recharts";
 import { useState } from "react";
+import DailyTable from "./DailyTable";
 
 export default function Charts({ dailyLog, cycles }) {
   const [tab, setTab] = useState("return");
@@ -15,6 +16,7 @@ export default function Charts({ dailyLog, cycles }) {
     { key: "return", label: "수익률 추이" },
     { key: "porang", label: "포랭/LP 변화" },
     { key: "cycle", label: "사이클별 손익" },
+    { key: "daily", label: "일별 현황" },
   ];
 
   return (
@@ -35,6 +37,7 @@ export default function Charts({ dailyLog, cycles }) {
         {tab === "return" && <ReturnChart data={sampled} />}
         {tab === "porang" && <PorangChart data={sampled} />}
         {tab === "cycle" && <CycleChart cycles={cycles} />}
+        {tab === "daily" && <DailyTable dailyLog={dailyLog} />}
       </div>
     </section>
   );
