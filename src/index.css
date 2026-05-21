@@ -304,6 +304,18 @@ body {
 .val-pink { color: var(--pink) !important; }
 .val-warn { color: var(--accent2) !important; }
 .action-cell { color: #888; white-space: normal; word-break: break-word; }
+.row-cycle-end td { background: rgba(0,212,170,0.06); }
+.cycle-num { color: var(--muted); font-size: 11px; }
+.cycle-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.cycle-pos { background: rgba(52,211,153,0.15); color: var(--green); }
+.cycle-neg { background: rgba(248,113,113,0.15); color: var(--red); }
 
 @media (max-width: 640px) {
   .main { padding: 16px 12px 60px; }

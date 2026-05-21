@@ -37,12 +37,13 @@ export default function DailyTable({ dailyLog }) {
               <th>포랭</th>
               <th>평가액</th>
               <th>수익률</th>
+              <th>사이클</th>
               <th>액션</th>
             </tr>
           </thead>
           <tbody>
             {filtered.map((d, i) => (
-              <tr key={i} className={d.action !== "-" ? "row-active" : ""}>
+              <tr key={i} className={d.cycleEndPnlPct !== null ? "row-cycle-end" : d.action !== "-" ? "row-active" : ""}>
                 <td>{d.date}</td>
                 <td>${d.close.toFixed(2)}</td>
                 <td>{d.lp ? `$${d.lp.toFixed(2)}` : "-"}</td>
@@ -52,6 +53,15 @@ export default function DailyTable({ dailyLog }) {
                 <td>${d.totalValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
                 <td className={d.returnPct >= 0 ? "val-green" : "val-red"}>
                   {d.returnPct >= 0 ? "+" : ""}{d.returnPct.toFixed(2)}%
+                </td>
+                <td>
+                  {d.cycleEndPnlPct !== null ? (
+                    <span className={`cycle-badge ${d.cycleEndPnlPct >= 0 ? "cycle-pos" : "cycle-neg"}`}>
+                      #{d.cycleNum} {d.cycleEndPnlPct >= 0 ? "+" : ""}{d.cycleEndPnlPct.toFixed(2)}%
+                    </span>
+                  ) : (
+                    <span className="cycle-num">#{d.cycleNum}</span>
+                  )}
                 </td>
                 <td className="action-cell">{d.action}</td>
               </tr>

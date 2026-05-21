@@ -143,13 +143,16 @@ export function runBacktest(prices, investmentUSD, startFrom = null) {
     rankBundles = remaining;
 
     // ── 5. 사이클 종료 체크 ──────────────────────────
+    let cycleEndPnlPct = null;
     if (updownSell && port === 0) {
+      const pnlPct = (cash - cycleStartCash) / cycleStartCash * 100;
+      cycleEndPnlPct = parseFloat(pnlPct.toFixed(2));
+
       if (rankBundles.length > 0) {
         // 똥 이월
         dongCount += 1;
         const dongBundles = [...rankBundles];
-        port = dongBundles.length; // 묶음 수만큼 포트로
-        // 업다운 보유 수량에 떨법 물량 합산
+        port = dongBundles.length;
         for (const b of dongBundles) totalShares += b.shares;
         rankBundles = [];
         action.push(`⚠️ 똥 이월! ${dongBundles.length}묶음 → 포트=${port}`);
@@ -159,19 +162,19 @@ export function runBacktest(prices, investmentUSD, startFrom = null) {
           startDate: prices[cycleStartIdx].date,
           endDate: today.date,
           pnl: cash - cycleStartCash,
-          pnlPct: ((cash - cycleStartCash) / cycleStartCash) * 100,
+          pnlPct,
           dong: true,
           dongBundles: dongBundles.length,
         });
       } else {
-        // 깔끔 종료 → 새 사이클을 위해 lastUpdownPrice 초기화
+        // 깔끔 종료
         lastUpdownPrice = null;
         cycles.push({
           cycleNum: currentCycleNum,
           startDate: prices[cycleStartIdx].date,
           endDate: today.date,
           pnl: cash - cycleStartCash,
-          pnlPct: ((cash - cycleStartCash) / cycleStartCash) * 100,
+          pnlPct,
           dong: false,
           dongBundles: 0,
         });
@@ -207,6 +210,8 @@ export function runBacktest(prices, investmentUSD, startFrom = null) {
       updownSell,
       tteobBuy,
       tteobSellCount: tteobSells.length,
+      cycleNum: currentCycleNum,
+      cycleEndPnlPct,
     });
   }
 

@@ -1,5 +1,5 @@
 export default function Summary({ summary, params }) {
-  const { totalReturn, finalValue, totalCycles, dongCount, maxDrawdown, currentCycleReturn } = summary;
+  const { totalReturn, finalValue, totalCycles, dongCount, maxDrawdown } = summary;
   const isPositive = totalReturn >= 0;
 
   return (
@@ -34,11 +34,6 @@ export default function Summary({ summary, params }) {
           label="최대 낙폭 (MDD)"
           value={`-${maxDrawdown.toFixed(2)}%`}
           highlight="negative"
-        />
-        <StatCard
-          label="이번 사이클 수익률"
-          value={`${currentCycleReturn >= 0 ? "+" : ""}${currentCycleReturn.toFixed(2)}%`}
-          highlight={currentCycleReturn >= 0 ? "positive" : "negative"}
         />
       </div>
     </section>
