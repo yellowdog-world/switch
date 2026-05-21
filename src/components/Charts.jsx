@@ -6,7 +6,7 @@ import {
 import { useState } from "react";
 import DailyTable from "./DailyTable";
 
-export default function Charts({ dailyLog, cycles }) {
+export default function Charts({ dailyLog, cycles, symbol }) {
   const [tab, setTab] = useState("daily");
 
   // 날짜 샘플링 (너무 많으면 느림)
@@ -34,7 +34,7 @@ export default function Charts({ dailyLog, cycles }) {
       </div>
 
       <div className="chart-wrap">
-        {tab === "return" && <ReturnChart data={sampled} />}
+        {tab === "return" && <ReturnChart data={sampled} symbol={symbol} />}
         {tab === "porang" && <PorangChart data={sampled} />}
         {tab === "cycle" && <CycleChart cycles={cycles} />}
         {tab === "daily" && <DailyTable dailyLog={dailyLog} />}
@@ -43,10 +43,16 @@ export default function Charts({ dailyLog, cycles }) {
   );
 }
 
-function ReturnChart({ data }) {
+function ReturnChart({ data, symbol }) {
+  const firstClose = data[0]?.close;
+  const chartData = data.map(d => ({
+    ...d,
+    buyHoldPct: firstClose ? parseFloat(((d.close - firstClose) / firstClose * 100).toFixed(2)) : 0,
+  }));
+
   return (
     <ResponsiveContainer width="100%" height={360}>
-      <LineChart data={data} margin={{ top: 10, right: 20, bottom: 10, left: 10 }}>
+      <LineChart data={chartData} margin={{ top: 10, right: 20, bottom: 10, left: 10 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
         <XAxis dataKey="date" tick={{ fill: "#888", fontSize: 11 }} tickLine={false} interval="preserveStartEnd" />
         <YAxis tick={{ fill: "#888", fontSize: 11 }} tickLine={false} tickFormatter={v => `${v.toFixed(1)}%`} />
@@ -54,17 +60,12 @@ function ReturnChart({ data }) {
           contentStyle={{ background: "#1a1a2e", border: "1px solid #333", borderRadius: 8, color: "#e0e0e0" }}
           labelStyle={{ color: "#aaa" }}
           itemStyle={{ color: "#e0e0e0" }}
-          formatter={(v) => [`${v.toFixed(2)}%`, "수익률"]}
+          formatter={(v, name) => [`${v.toFixed(2)}%`, name]}
         />
+        <Legend wrapperStyle={{ color: "#aaa", fontSize: 12 }} />
         <ReferenceLine y={0} stroke="#444" strokeDasharray="4 4" />
-        <Line
-          type="monotone"
-          dataKey="returnPct"
-          stroke="#00d4aa"
-          strokeWidth={2}
-          dot={false}
-          name="수익률"
-        />
+        <Line type="monotone" dataKey="returnPct" stroke="#00d4aa" strokeWidth={2} dot={false} name="스위치 수익률" />
+        <Line type="monotone" dataKey="buyHoldPct" stroke="#f59e0b" strokeWidth={1.5} dot={false} name={`${symbol} 보유`} strokeDasharray="5 3" />
       </LineChart>
     </ResponsiveContainer>
   );

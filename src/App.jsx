@@ -75,7 +75,7 @@ export default function App() {
         {result && params && (
           <>
             <Summary summary={result.summary} params={params} />
-            <Charts dailyLog={result.dailyLog} cycles={result.cycles} />
+            <Charts dailyLog={result.dailyLog} cycles={result.cycles} symbol={params.symbol} />
           </>
         )}
       </main>
