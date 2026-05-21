@@ -16,8 +16,13 @@ export default function App() {
     setResult(null);
 
     try {
+      // 첫날 어제종가 확보를 위해 7일 앞당겨 데이터 요청
+      const lookbackFrom = new Date(from);
+      lookbackFrom.setDate(lookbackFrom.getDate() - 7);
+      const lookbackFromStr = lookbackFrom.toISOString().split('T')[0];
+
       const res = await fetch(
-        `/api/stock?symbol=${encodeURIComponent(symbol)}&from=${from}&to=${to}`
+        `/api/stock?symbol=${encodeURIComponent(symbol)}&from=${lookbackFromStr}&to=${to}`
       );
       const data = await res.json();
 
@@ -26,6 +31,10 @@ export default function App() {
         throw new Error("해당 기간 데이터가 부족합니다.");
 
       const backtestResult = runBacktest(data.prices, investment);
+
+      // 사용자가 선택한 from 이전 날짜는 표시에서 제거
+      backtestResult.dailyLog = backtestResult.dailyLog.filter(d => d.date >= from);
+
       setResult(backtestResult);
       setParams({ symbol, from, to, investment });
     } catch (e) {
