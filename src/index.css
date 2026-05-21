@@ -305,6 +305,7 @@ body {
 .val-warn { color: var(--accent2) !important; }
 .action-cell { white-space: normal; word-break: break-word; }
 .action-buy { color: #60a5fa; }
+.action-virtual { color: #a78bfa; }
 .action-sell { color: #f87171; }
 .action-warn { color: #f59e0b; }
 .action-neutral { color: #888; }

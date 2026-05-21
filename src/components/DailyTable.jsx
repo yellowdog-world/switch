@@ -7,7 +7,8 @@ function ActionText({ action }) {
     <>
       {parts.map((part, i) => {
         let cls = "action-neutral";
-        if (part.includes("매수")) cls = "action-buy";
+        if (part.includes("샀다치고")) cls = "action-virtual";
+        else if (part.includes("매수")) cls = "action-buy";
         else if (part.includes("매도")) cls = "action-sell";
         else if (part.includes("이월")) cls = "action-warn";
         return (
@@ -26,7 +27,7 @@ export default function DailyTable({ dailyLog }) {
 
   const filtered = dailyLog.filter(d => {
     if (filter === "action") return d.action !== "-";
-    if (filter === "buy") return d.updownBuy || d.tteobBuy;
+    if (filter === "buy") return d.updownBuy || d.virtualBuy || d.tteobBuy;
     if (filter === "sell") return d.updownSell || d.tteobSellCount > 0;
     return true;
   });

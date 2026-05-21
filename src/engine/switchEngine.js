@@ -59,16 +59,17 @@ export function runBacktest(prices, investmentUSD, startFrom = null) {
 
     let action = [];
     let updownBuy = false;
+    let virtualBuy = false;
     let updownSell = false;
     let tteobBuy = false;
     let tteobSells = [];
     const rankCountBefore = rankBundles.length; // 오늘 새로 산 떨법 묶음 구분용
 
     // ── 1. 업다운 매수 ──────────────────────────────
-    if (porang < MAX_PORANG && lp !== null) {
+    if (lp !== null) {
       if (lastUpdownPrice === null) {
-        // 최초 진입: 어제 종가 대비 10% 이내 (급등 제외)
-        if (today.close <= yesterday.close * 1.10) {
+        // 최초 진입: 포랭 여유 있을 때만, 어제 종가 대비 10% 이내 (급등 제외)
+        if (porang < MAX_PORANG && today.close <= yesterday.close * 1.10) {
           const shares = Math.floor(unitAmount / today.close);
           const spent = shares * today.close;
           totalShares += shares;
@@ -83,22 +84,31 @@ export function runBacktest(prices, investmentUSD, startFrom = null) {
         // 추가 매수: LP × (1 - 0.2% × 포랭) 이하
         const threshold = lp * (1 - 0.002 * porang);
         if (today.close <= threshold) {
-          const shares = Math.floor(unitAmount / today.close);
-          const spent = shares * today.close;
-          totalShares += shares;
-          cash -= spent;
-          lastUpdownPrice = today.close;
-          lp = today.close;
-          port += 1;
-          updownBuy = true;
-          action.push(`업다운 매수 (${porang + 1}차) @${today.close.toFixed(2)}(${shares}주)`);
+          if (porang < MAX_PORANG) {
+            // 실제 매수
+            const shares = Math.floor(unitAmount / today.close);
+            const spent = shares * today.close;
+            totalShares += shares;
+            cash -= spent;
+            lastUpdownPrice = today.close;
+            lp = today.close;
+            port += 1;
+            updownBuy = true;
+            action.push(`업다운 매수 (${porang + 1}차) @${today.close.toFixed(2)}(${shares}주)`);
+          } else {
+            // 샀다치고: 포랭 꽉 참 → LP만 갱신
+            lastUpdownPrice = today.close;
+            lp = today.close;
+            virtualBuy = true;
+            action.push(`샀다치고 @${today.close.toFixed(2)}`);
+          }
         }
       }
     }
 
     // ── 2. 업다운 매도 ──────────────────────────────
-    // 매수와 같은 날 매도는 하지 않음
-    if (!updownBuy && port > 0 && lp !== null && today.close >= lp) {
+    // 매수(실제/가상) 와 같은 날 매도는 하지 않음
+    if (!updownBuy && !virtualBuy && port > 0 && lp !== null && today.close >= lp) {
       const sellShares = Math.floor(totalShares / port);
       const sellAmount = sellShares * today.close;
       totalShares -= sellShares;
@@ -212,6 +222,7 @@ export function runBacktest(prices, investmentUSD, startFrom = null) {
       tteobValue: parseFloat(tteobValue.toFixed(2)),
       action: action.join(' / ') || '-',
       updownBuy,
+      virtualBuy,
       updownSell,
       tteobBuy,
       tteobSellCount: tteobSells.length,
