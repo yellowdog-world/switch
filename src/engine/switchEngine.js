@@ -186,6 +186,7 @@ export function runBacktest(prices, investmentUSD, startFrom = null) {
     const tteobValue = rankBundles.reduce((sum, b) => sum + b.shares * today.close, 0);
     const totalValue = cash + updownValue + tteobValue;
     const returnPct = ((totalValue - investmentUSD) / investmentUSD) * 100;
+    const cashUsedPct = parseFloat(((investmentUSD - cash) / investmentUSD * 100).toFixed(2));
 
     dailyLog.push({
       date: today.date,
@@ -197,6 +198,7 @@ export function runBacktest(prices, investmentUSD, startFrom = null) {
       lastUpdownPrice: lastUpdownPrice ? parseFloat(lastUpdownPrice.toFixed(4)) : null,
       totalValue: parseFloat(totalValue.toFixed(2)),
       returnPct: parseFloat(returnPct.toFixed(2)),
+      cashUsedPct,
       cash: parseFloat(cash.toFixed(2)),
       updownValue: parseFloat(updownValue.toFixed(2)),
       tteobValue: parseFloat(tteobValue.toFixed(2)),
@@ -211,6 +213,7 @@ export function runBacktest(prices, investmentUSD, startFrom = null) {
   const finalValue = dailyLog[dailyLog.length - 1]?.totalValue ?? investmentUSD;
   const totalReturn = ((finalValue - investmentUSD) / investmentUSD) * 100;
   const maxDrawdown = calcMaxDrawdown(dailyLog.map(d => d.totalValue));
+  const currentCycleReturn = parseFloat(((finalValue - cycleStartCash) / cycleStartCash * 100).toFixed(2));
 
   return {
     dailyLog,
@@ -221,6 +224,7 @@ export function runBacktest(prices, investmentUSD, startFrom = null) {
       totalCycles: cycles.length,
       dongCount,
       maxDrawdown: parseFloat(maxDrawdown.toFixed(2)),
+      currentCycleReturn,
     },
   };
 }

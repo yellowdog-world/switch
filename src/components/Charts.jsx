@@ -73,21 +73,22 @@ function ReturnChart({ data }) {
 function PorangChart({ data }) {
   return (
     <ResponsiveContainer width="100%" height={360}>
-      <LineChart data={data} margin={{ top: 10, right: 20, bottom: 10, left: 10 }}>
+      <LineChart data={data} margin={{ top: 10, right: 50, bottom: 10, left: 10 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
         <XAxis dataKey="date" tick={{ fill: "#888", fontSize: 11 }} tickLine={false} interval="preserveStartEnd" />
-        <YAxis yAxisId="left" tick={{ fill: "#888", fontSize: 11 }} tickLine={false} />
-        <YAxis yAxisId="right" orientation="right" tick={{ fill: "#888", fontSize: 11 }} tickLine={false} tickFormatter={v => `$${v.toFixed(0)}`} />
+        <YAxis yAxisId="left" tick={{ fill: "#888", fontSize: 11 }} tickLine={false} domain={[0, 15]} />
+        <YAxis yAxisId="right" orientation="right" tick={{ fill: "#888", fontSize: 11 }} tickLine={false} tickFormatter={v => `${v.toFixed(0)}%`} domain={[0, 100]} />
         <Tooltip
           contentStyle={{ background: "#1a1a2e", border: "1px solid #333", borderRadius: 8, color: "#e0e0e0" }}
           labelStyle={{ color: "#aaa" }}
           itemStyle={{ color: "#e0e0e0" }}
+          formatter={(v, name) => name === "투자금 소진" ? [`${v.toFixed(1)}%`, name] : [v, name]}
         />
         <Legend wrapperStyle={{ color: "#aaa", fontSize: 12 }} />
         <Line yAxisId="left" type="stepAfter" dataKey="porang" stroke="#f59e0b" strokeWidth={2} dot={false} name="포랭" />
         <Line yAxisId="left" type="stepAfter" dataKey="port" stroke="#60a5fa" strokeWidth={1.5} dot={false} name="포트" strokeDasharray="4 2" />
         <Line yAxisId="left" type="stepAfter" dataKey="rank" stroke="#f472b6" strokeWidth={1.5} dot={false} name="랭크" strokeDasharray="4 2" />
-        <Line yAxisId="right" type="monotone" dataKey="lp" stroke="#a78bfa" strokeWidth={1.5} dot={false} name="LP($)" />
+        <Line yAxisId="right" type="monotone" dataKey="cashUsedPct" stroke="#34d399" strokeWidth={2} dot={false} name="투자금 소진" strokeDasharray="6 2" />
       </LineChart>
     </ResponsiveContainer>
   );
