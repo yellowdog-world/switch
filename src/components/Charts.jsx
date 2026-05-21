@@ -9,7 +9,7 @@ import DailyTable from "./DailyTable";
 
 const COMPARE_COLORS = ["#a78bfa", "#fb923c", "#38bdf8", "#f472b6", "#4ade80"];
 
-export default function Charts({ dailyLog, cycles, symbol }) {
+export default function Charts({ dailyLog, cycles, symbol, symbolName }) {
   const [tab, setTab] = useState("daily");
 
   // 날짜 샘플링 (너무 많으면 느림)
@@ -37,7 +37,7 @@ export default function Charts({ dailyLog, cycles, symbol }) {
       </div>
 
       <div className="chart-wrap">
-        {tab === "return" && <ReturnChart data={sampled} symbol={symbol} />}
+        {tab === "return" && <ReturnChart data={sampled} symbol={symbol} symbolName={symbolName || symbol} />}
         {tab === "porang" && <PorangChart data={sampled} />}
         {tab === "cycle" && <CycleChart cycles={cycles} />}
         {tab === "daily" && <DailyTable dailyLog={dailyLog} />}
@@ -46,7 +46,7 @@ export default function Charts({ dailyLog, cycles, symbol }) {
   );
 }
 
-function ReturnChart({ data, symbol }) {
+function ReturnChart({ data, symbol, symbolName }) {
   const [showSwitch, setShowSwitch] = useState(true);
   const [showBuyHold, setShowBuyHold] = useState(true);
   const [compareSymbols, setCompareSymbols] = useState([]);
@@ -104,7 +104,7 @@ function ReturnChart({ data, symbol }) {
         if (last != null) filledMap[row.date] = last;
       }
 
-      setCompareData(prev => ({ ...prev, [sym]: { filledMap, firstClose: fc } }));
+      setCompareData(prev => ({ ...prev, [sym]: { filledMap, firstClose: fc, name: json.symbolName || sym } }));
       setCompareSymbols(prev => [...prev, sym]);
       setInputSymbol("");
     } catch (e) {
@@ -135,7 +135,7 @@ function ReturnChart({ data, symbol }) {
           onClick={() => setShowBuyHold(v => !v)}
         >
           <span className="legend-dot" style={{ background: showBuyHold ? "#f59e0b" : undefined }} />
-          {symbol} 보유
+          {symbolName} 보유
         </button>
         {compareSymbols.map((sym, i) => {
           const color = COMPARE_COLORS[i % COMPARE_COLORS.length];
@@ -146,7 +146,7 @@ function ReturnChart({ data, symbol }) {
               style={{ "--chip-color": color, background: `${color}1a` }}
             >
               <span className="legend-dot" style={{ background: color }} />
-              {sym} 보유
+              {compareData[sym]?.name || sym} 보유
               <button className="legend-remove" onClick={() => removeCompare(sym)}>×</button>
             </span>
           );
@@ -187,7 +187,7 @@ function ReturnChart({ data, symbol }) {
             <Line type="monotone" dataKey="returnPct" stroke="#00d4aa" strokeWidth={2} dot={false} name="스위치 수익률" />
           )}
           {showBuyHold && (
-            <Line type="monotone" dataKey="buyHoldPct" stroke="#f59e0b" strokeWidth={1.5} dot={false} name={`${symbol} 보유`} strokeDasharray="5 3" />
+            <Line type="monotone" dataKey="buyHoldPct" stroke="#f59e0b" strokeWidth={1.5} dot={false} name={`${symbolName} 보유`} strokeDasharray="5 3" />
           )}
           {compareSymbols.map((sym, i) => (
             <Line
@@ -197,7 +197,7 @@ function ReturnChart({ data, symbol }) {
               stroke={COMPARE_COLORS[i % COMPARE_COLORS.length]}
               strokeWidth={1.5}
               dot={false}
-              name={`${sym} 보유`}
+              name={`${compareData[sym]?.name || sym} 보유`}
               strokeDasharray="5 3"
               connectNulls
             />

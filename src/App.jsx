@@ -30,7 +30,7 @@ export default function App() {
       const backtestResult = runBacktest(data.prices, investment, from);
 
       setResult(backtestResult);
-      setParams({ symbol, from, to, investment });
+      setParams({ symbol, symbolName: data.symbolName || symbol, from, to, investment });
     } catch (e) {
       setError(e.message);
     } finally {
@@ -71,7 +71,7 @@ export default function App() {
         {result && params && (
           <>
             <Summary summary={result.summary} params={params} />
-            <Charts dailyLog={result.dailyLog} cycles={result.cycles} symbol={params.symbol} />
+            <Charts dailyLog={result.dailyLog} cycles={result.cycles} symbol={params.symbol} symbolName={params.symbolName} />
           </>
         )}
       </main>

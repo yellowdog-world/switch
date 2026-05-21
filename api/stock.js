@@ -39,13 +39,15 @@ export default async function handler(req, res) {
 
     const timestamps = result.timestamp;
     const closes = result.indicators.quote[0].close;
+    const meta = result.meta;
+    const symbolName = meta.longName || meta.shortName || symbol;
 
     const prices = timestamps.map((ts, i) => ({
       date: new Date(ts * 1000).toISOString().split('T')[0],
       close: closes[i] ? parseFloat(closes[i].toFixed(4)) : null,
     })).filter(p => p.close !== null);
 
-    return res.status(200).json({ symbol, prices });
+    return res.status(200).json({ symbol, symbolName, prices });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
