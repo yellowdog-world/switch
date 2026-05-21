@@ -1,5 +1,26 @@
 import { useState } from "react";
 
+function ActionText({ action }) {
+  if (!action || action === "-") return <span className="action-dash">-</span>;
+  const parts = action.split(" / ");
+  return (
+    <>
+      {parts.map((part, i) => {
+        let cls = "action-neutral";
+        if (part.includes("매수")) cls = "action-buy";
+        else if (part.includes("매도")) cls = "action-sell";
+        else if (part.includes("이월")) cls = "action-warn";
+        return (
+          <span key={i}>
+            {i > 0 && <span className="action-sep"> / </span>}
+            <span className={cls}>{part}</span>
+          </span>
+        );
+      })}
+    </>
+  );
+}
+
 export default function DailyTable({ dailyLog }) {
   const [filter, setFilter] = useState("all");
 
@@ -57,13 +78,13 @@ export default function DailyTable({ dailyLog }) {
                 <td>
                   {d.cycleEndPnlPct !== null ? (
                     <span className={`cycle-badge ${d.cycleEndPnlPct >= 0 ? "cycle-pos" : "cycle-neg"}`}>
-                      #{d.cycleNum} {d.cycleEndPnlPct >= 0 ? "+" : ""}{d.cycleEndPnlPct.toFixed(2)}%
+                      #{d.cycleEndNum} {d.cycleEndPnlPct >= 0 ? "+" : ""}{d.cycleEndPnlPct.toFixed(2)}%
                     </span>
                   ) : (
                     <span className="cycle-num">#{d.cycleNum}</span>
                   )}
                 </td>
-                <td className="action-cell">{d.action}</td>
+                <td className="action-cell"><ActionText action={d.action} /></td>
               </tr>
             ))}
           </tbody>
