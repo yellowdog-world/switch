@@ -5,7 +5,11 @@
  *   포트(port)  - 업다운 매수 횟수
  *   랭크(rank)  - 떨법 묶음 수
  *   포랭        - 포트 + 랭크 (최대 15)
- *   LP          - 마지막 업다운 체결가 (매수 or 매도)
+ *   LP          - 업다운 매수/매도 기준가
+ *                 · 포트>0, 랭크=0 → 매일 어제종가로 갱신
+ *                 · 업다운 미진입(lastUpdownPrice=null) → 어제종가
+ *                 · 그 외 → lastUpdownPrice 고정
+ *   lastUpdownPrice - 마지막 업다운 체결가 (W열)
  */
 
 const MAX_PORANG = 15;
@@ -17,6 +21,7 @@ export function runBacktest(prices, investmentUSD) {
   let port = 0;
   let rankBundles = []; // [{ buyPrice, shares, amount }]
   let lp = null;
+  let lastUpdownPrice = null; // 마지막 업다운 체결가 (사이클 종료 시 null 초기화)
   let totalShares = 0; // 업다운 보유 주식 수
   let cash = investmentUSD;
 
@@ -32,6 +37,19 @@ export function runBacktest(prices, investmentUSD) {
   for (let i = 0; i < prices.length; i++) {
     const today = prices[i];
     const yesterday = prices[i - 1];
+
+    // ── LP 재계산 (루프 시작 시) ──────────────────────
+    // 포트>0, 랭크=0: 업다운만 보유 → LP = 어제종가 (매일 갱신)
+    // 아직 업다운 매수 없음: LP = 어제종가
+    // 그 외: LP = lastUpdownPrice 고정
+    if (yesterday) {
+      if ((port > 0 && rankBundles.length === 0) || lastUpdownPrice === null) {
+        lp = yesterday.close;
+      } else {
+        lp = lastUpdownPrice;
+      }
+    }
+
     const porang = port + rankBundles.length;
 
     let action = [];
@@ -41,25 +59,27 @@ export function runBacktest(prices, investmentUSD) {
     let tteobSells = [];
 
     // ── 1. 업다운 매수 ──────────────────────────────
-    if (porang < MAX_PORANG) {
-      if (port === 0 && rankBundles.length === 0) {
-        // 사이클 첫날: 어제 종가 대비 10% 이내 상승
-        if (yesterday && today.close <= yesterday.close * 1.10) {
+    if (porang < MAX_PORANG && lp !== null) {
+      if (lastUpdownPrice === null) {
+        // 최초 진입: 어제 종가 대비 10% 이내 (급등 제외)
+        if (today.close <= yesterday.close * 1.10) {
           const shares = unitAmount / today.close;
           totalShares += shares;
           cash -= unitAmount;
+          lastUpdownPrice = today.close;
           lp = today.close;
           port += 1;
           updownBuy = true;
           action.push(`업다운 매수 (첫날) @${today.close.toFixed(2)}`);
         }
-      } else if (lp !== null) {
-        // 일반: LP × (1 - 0.2% × 포랭) 이하
+      } else {
+        // 추가 매수: LP × (1 - 0.2% × 포랭) 이하
         const threshold = lp * (1 - 0.002 * porang);
         if (today.close <= threshold) {
           const shares = unitAmount / today.close;
           totalShares += shares;
           cash -= unitAmount;
+          lastUpdownPrice = today.close;
           lp = today.close;
           port += 1;
           updownBuy = true;
@@ -76,6 +96,7 @@ export function runBacktest(prices, investmentUSD) {
       const sellAmount = sellShares * today.close;
       totalShares -= sellShares;
       cash += sellAmount;
+      lastUpdownPrice = today.close;
       lp = today.close;
       port -= 1;
       updownSell = true;
@@ -131,7 +152,8 @@ export function runBacktest(prices, investmentUSD) {
           dongBundles: dongBundles.length,
         });
       } else {
-        // 깔끔 종료
+        // 깔끔 종료 → 새 사이클을 위해 lastUpdownPrice 초기화
+        lastUpdownPrice = null;
         cycles.push({
           cycleNum: currentCycleNum,
           startDate: prices[cycleStartIdx].date,
@@ -160,6 +182,7 @@ export function runBacktest(prices, investmentUSD) {
       rank: rankBundles.length,
       porang: port + rankBundles.length,
       lp: lp ? parseFloat(lp.toFixed(4)) : null,
+      lastUpdownPrice: lastUpdownPrice ? parseFloat(lastUpdownPrice.toFixed(4)) : null,
       totalValue: parseFloat(totalValue.toFixed(2)),
       returnPct: parseFloat(returnPct.toFixed(2)),
       cash: parseFloat(cash.toFixed(2)),
