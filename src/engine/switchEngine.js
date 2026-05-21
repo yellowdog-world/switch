@@ -144,9 +144,11 @@ export function runBacktest(prices, investmentUSD, startFrom = null) {
 
     // ── 5. 사이클 종료 체크 ──────────────────────────
     let cycleEndPnlPct = null;
+    let cycleEndNum = null;
     if (updownSell && port === 0) {
       const pnlPct = (cash - cycleStartCash) / cycleStartCash * 100;
       cycleEndPnlPct = parseFloat(pnlPct.toFixed(2));
+      cycleEndNum = currentCycleNum;
 
       if (rankBundles.length > 0) {
         // 똥 이월
@@ -166,6 +168,9 @@ export function runBacktest(prices, investmentUSD, startFrom = null) {
           dong: true,
           dongBundles: dongBundles.length,
         });
+        cycleStartCash = cash;
+        cycleStartIdx = i + 1;
+        currentCycleNum += 1;
       } else {
         // 깔끔 종료
         lastUpdownPrice = null;
@@ -212,6 +217,7 @@ export function runBacktest(prices, investmentUSD, startFrom = null) {
       tteobSellCount: tteobSells.length,
       cycleNum: currentCycleNum,
       cycleEndPnlPct,
+      cycleEndNum,
     });
   }
 
