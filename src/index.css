@@ -142,7 +142,9 @@ body {
 .input-prefixed { padding-left: 26px; }
 .hint { font-size: 11px; color: var(--accent); }
 
-.quick-symbols { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.quick-symbols { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; align-items: center; }
+.symbol-group-label { font-size: 10px; color: var(--muted); letter-spacing: 0.05em; white-space: nowrap; }
+.chip-kr { font-size: 10px; }
 .chip {
   padding: 4px 12px;
   border-radius: 100px;

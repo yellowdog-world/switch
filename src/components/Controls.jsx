@@ -1,6 +1,14 @@
 import { useState } from "react";
 
-const POPULAR = ["SOXL", "AAPL", "TSLA", "NVDA", "SPY", "QQQ", "TQQQ"];
+const POPULAR_US = ["SOXL", "AAPL", "TSLA", "NVDA", "SPY", "QQQ", "TQQQ"];
+
+const POPULAR_KR = [
+  { symbol: "122630.KS", label: "KODEX 레버리지" },
+  { symbol: "409820.KS", label: "KODEX 나스닥100레버리지" },
+  { symbol: "261220.KS", label: "KODEX S&P500레버리지" },
+  { symbol: "494310.KS", label: "TIGER 필라델피아반도체레버리지" },
+  { symbol: "48808.KS",  label: "TIGER 반도체TOP10레버리지" },
+];
 const STORAGE_KEY = "yd_controls";
 
 const getDefaultDates = () => {
@@ -91,7 +99,7 @@ export default function Controls({ onRun, loading }) {
             required
           />
           <div className="quick-symbols">
-            {POPULAR.map(s => (
+            {POPULAR_US.map(s => (
               <button
                 key={s}
                 type="button"
@@ -102,7 +110,21 @@ export default function Controls({ onRun, loading }) {
               </button>
             ))}
           </div>
-          <span className="hint">한국 ETF는 종목코드 뒤에 .KS를 붙이세요 (예: 423920.KS)</span>
+          <div className="quick-symbols">
+            <span className="symbol-group-label">🇰🇷 국내 ETF</span>
+            {POPULAR_KR.map(({ symbol: s, label }) => (
+              <button
+                key={s}
+                type="button"
+                className={`chip chip-kr ${symbol === s ? "chip-active" : ""}`}
+                onClick={() => update("symbol", s)}
+                title={s}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          <span className="hint">한국 ETF 직접 입력 시 종목코드 뒤에 .KS를 붙이세요 (예: 423920.KS)</span>
         </div>
 
         <div className="control-row">
