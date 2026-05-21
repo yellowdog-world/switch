@@ -3,6 +3,7 @@ import Controls from "./components/Controls";
 import Charts from "./components/Charts";
 import Summary from "./components/Summary";
 import { runBacktest } from "./engine/switchEngine";
+import { fetchPrices } from "./utils/stockCache";
 
 export default function App() {
   const [loading, setLoading] = useState(false);
@@ -21,13 +22,8 @@ export default function App() {
       lookbackFrom.setDate(lookbackFrom.getDate() - 7);
       const lookbackFromStr = lookbackFrom.toISOString().split('T')[0];
 
-      const res = await fetch(
-        `/api/stock?symbol=${encodeURIComponent(symbol)}&from=${lookbackFromStr}&to=${to}`
-      );
-      const data = await res.json();
-
-      if (!res.ok) throw new Error(data.error || "데이터 로드 실패");
-      if (!data.prices || data.prices.length < 2)
+      const data = await fetchPrices(symbol, lookbackFromStr, to);
+      if (data.prices.length < 2)
         throw new Error("해당 기간 데이터가 부족합니다.");
 
       // from을 넘겨 lookback 데이터는 어제종가 확보용으로만 쓰고 시뮬레이션은 from부터 시작

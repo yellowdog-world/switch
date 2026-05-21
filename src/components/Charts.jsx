@@ -4,6 +4,7 @@ import {
   ResponsiveContainer, ReferenceLine, Legend, Cell
 } from "recharts";
 import { useState } from "react";
+import { fetchPrices } from "../utils/stockCache";
 import DailyTable from "./DailyTable";
 
 const COMPARE_COLORS = ["#a78bfa", "#fb923c", "#38bdf8", "#f472b6", "#4ade80"];
@@ -85,12 +86,7 @@ function ReturnChart({ data, symbol }) {
       const lookbackFrom = fromDate.toISOString().split("T")[0];
       const to = data[data.length - 1].date;
 
-      const res = await fetch(
-        `/api/stock?symbol=${encodeURIComponent(sym)}&from=${lookbackFrom}&to=${to}`
-      );
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || "데이터 로드 실패");
-      if (!json.prices?.length) throw new Error("데이터 없음");
+      const json = await fetchPrices(sym, lookbackFrom, to);
 
       const startDate = data[0].date;
       const startIdx = json.prices.findIndex(p => p.date >= startDate);
