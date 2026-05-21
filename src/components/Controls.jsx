@@ -11,15 +11,37 @@ const POPULAR_KR = [
 ];
 const STORAGE_KEY = "yd_controls";
 
+const PERIODS = [
+  { key: "3m", label: "3개월" },
+  { key: "6m", label: "6개월" },
+  { key: "1y", label: "1년" },
+  { key: "3y", label: "3년" },
+];
+
+const toKSTDateStr = (date) => {
+  const kst = new Date(date.getTime() + 9 * 60 * 60 * 1000);
+  return kst.toISOString().split("T")[0];
+};
+
 const getDefaultDates = () => {
   const today = new Date();
-  const yesterday = new Date(today);
-  yesterday.setDate(today.getDate() - 1);
+  const todayKST = toKSTDateStr(today);
   const year = today.getMonth() === 0 ? today.getFullYear() - 1 : today.getFullYear();
   return {
     from: `${year}-01-01`,
-    to: yesterday.toISOString().split('T')[0],
+    to: todayKST,
   };
+};
+
+const calcPeriodDates = (key) => {
+  const to = new Date();
+  const toStr = toKSTDateStr(to);
+  const from = new Date(to);
+  if (key === "3m") from.setMonth(from.getMonth() - 3);
+  if (key === "6m") from.setMonth(from.getMonth() - 6);
+  if (key === "1y") from.setFullYear(from.getFullYear() - 1);
+  if (key === "3y") from.setFullYear(from.getFullYear() - 3);
+  return { from: toKSTDateStr(from), to: toStr };
 };
 
 const getInitialValues = () => {
@@ -64,13 +86,21 @@ export default function Controls({ onRun, loading }) {
   }
 
   const update = (field, value) => {
-    const next = { symbol, from, to, investment, [field]: value };
+    const next = { symbol, from, to, investment, porang, [field]: value };
     saveValues(next);
     if (field === "symbol") setSymbol(value);
     if (field === "from") setFrom(value);
     if (field === "to") setTo(value);
     if (field === "investment") setInvestment(value);
     if (field === "porang") setPorang(value);
+  };
+
+  const applyPeriod = (key) => {
+    const { from: f, to: t } = calcPeriodDates(key);
+    const next = { symbol, from: f, to: t, investment, porang };
+    saveValues(next);
+    setFrom(f);
+    setTo(t);
   };
 
   const copyLink = () => {
@@ -130,26 +160,40 @@ export default function Controls({ onRun, loading }) {
           <span className="hint">한국 ETF 직접 입력 시 종목코드 뒤에 .KS를 붙이세요 (예: 423920.KS)</span>
         </div>
 
-        <div className="control-row">
-          <div className="control-group">
-            <label>시작일</label>
-            <input
-              className="input"
-              type="date"
-              value={from}
-              onChange={e => update("from", e.target.value)}
-              required
-            />
+        <div className="control-group">
+          <div className="control-row">
+            <div className="control-group">
+              <label>시작일</label>
+              <input
+                className="input"
+                type="date"
+                value={from}
+                onChange={e => update("from", e.target.value)}
+                required
+              />
+            </div>
+            <div className="control-group">
+              <label>종료일</label>
+              <input
+                className="input"
+                type="date"
+                value={to}
+                onChange={e => update("to", e.target.value)}
+                required
+              />
+            </div>
           </div>
-          <div className="control-group">
-            <label>종료일</label>
-            <input
-              className="input"
-              type="date"
-              value={to}
-              onChange={e => update("to", e.target.value)}
-              required
-            />
+          <div className="quick-symbols">
+            {PERIODS.map(p => (
+              <button
+                key={p.key}
+                type="button"
+                className="chip"
+                onClick={() => applyPeriod(p.key)}
+              >
+                {p.label}
+              </button>
+            ))}
           </div>
         </div>
 

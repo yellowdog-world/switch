@@ -10,18 +10,19 @@ const PERIODS = [
   { key: "3y", label: "3년" },
 ];
 
+const toKSTDateStr = (date) => {
+  const kst = new Date(date.getTime() + 9 * 60 * 60 * 1000);
+  return kst.toISOString().split("T")[0];
+};
+
 function getPeriodDates(key) {
   const to = new Date();
-  to.setDate(to.getDate() - 1);
   const from = new Date(to);
   if (key === "3m") from.setMonth(from.getMonth() - 3);
   if (key === "6m") from.setMonth(from.getMonth() - 6);
   if (key === "1y") from.setFullYear(from.getFullYear() - 1);
   if (key === "3y") from.setFullYear(from.getFullYear() - 3);
-  return {
-    from: from.toISOString().split("T")[0],
-    to: to.toISOString().split("T")[0],
-  };
+  return { from: toKSTDateStr(from), to: toKSTDateStr(to) };
 }
 
 async function scanOne(symbol, from, to, investment, porang) {
