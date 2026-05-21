@@ -14,29 +14,44 @@ const getDefaultDates = () => {
   };
 };
 
-const loadSaved = () => {
+const getInitialValues = () => {
+  const { from: defaultFrom, to: defaultTo } = getDefaultDates();
+  // URL 파라미터 우선, 없으면 localStorage, 없으면 기본값
+  const params = new URLSearchParams(window.location.search);
+  if (params.get("symbol")) {
+    return {
+      symbol: params.get("symbol"),
+      from: params.get("from") ?? defaultFrom,
+      to: params.get("to") ?? defaultTo,
+      investment: Number(params.get("investment") ?? 15000),
+      fromUrl: true,
+    };
+  }
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
-    return saved ? JSON.parse(saved) : null;
-  } catch {
-    return null;
-  }
+    if (saved) return { ...JSON.parse(saved), fromUrl: false };
+  } catch {}
+  return { symbol: "SOXL", from: defaultFrom, to: defaultTo, investment: 15000, fromUrl: false };
 };
 
 const saveValues = (values) => {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(values));
-  } catch {}
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(values)); } catch {}
 };
 
 export default function Controls({ onRun, loading }) {
-  const { from: defaultFrom, to: defaultTo } = getDefaultDates();
-  const saved = loadSaved();
+  const initial = getInitialValues();
+  const [symbol, setSymbol] = useState(initial.symbol);
+  const [from, setFrom] = useState(initial.from);
+  const [to, setTo] = useState(initial.to);
+  const [investment, setInvestment] = useState(initial.investment);
+  const [copied, setCopied] = useState(false);
 
-  const [symbol, setSymbol] = useState(saved?.symbol ?? "SOXL");
-  const [from, setFrom] = useState(saved?.from ?? defaultFrom);
-  const [to, setTo] = useState(saved?.to ?? defaultTo);
-  const [investment, setInvestment] = useState(saved?.investment ?? 15000);
+  // URL 파라미터로 열린 경우 자동 실행 (최초 1회)
+  const [autoRan, setAutoRan] = useState(false);
+  if (initial.fromUrl && !autoRan && !loading) {
+    setAutoRan(true);
+    setTimeout(() => onRun({ symbol: initial.symbol, from: initial.from, to: initial.to, investment: initial.investment }), 0);
+  }
 
   const update = (field, value) => {
     const next = { symbol, from, to, investment, [field]: value };
@@ -45,6 +60,15 @@ export default function Controls({ onRun, loading }) {
     if (field === "from") setFrom(value);
     if (field === "to") setTo(value);
     if (field === "investment") setInvestment(value);
+  };
+
+  const copyLink = () => {
+    const params = new URLSearchParams({ symbol, from, to, investment });
+    const url = `${window.location.origin}${window.location.pathname}?${params}`;
+    navigator.clipboard.writeText(url).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
   };
 
   function handleSubmit(e) {
@@ -120,9 +144,14 @@ export default function Controls({ onRun, loading }) {
           <div className="hint">1회 매수금액: ${(investment / 15).toFixed(0)}</div>
         </div>
 
-        <button className="run-btn" type="submit" disabled={loading}>
-          {loading ? "시뮬레이션 중..." : "▶ 백테스트 실행"}
-        </button>
+        <div className="controls-actions">
+          <button className="run-btn" type="submit" disabled={loading}>
+            {loading ? "시뮬레이션 중..." : "▶ 백테스트 실행"}
+          </button>
+          <button className="share-btn" type="button" onClick={copyLink}>
+            {copied ? "✓ 복사됨" : "🔗 링크 복사"}
+          </button>
+        </div>
       </form>
     </section>
   );

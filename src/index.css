@@ -157,6 +157,7 @@ body {
 .chip:hover { border-color: var(--accent); color: var(--accent); }
 .chip-active { border-color: var(--accent); color: var(--accent); background: rgba(0,212,170,0.08); }
 
+.controls-actions { display: flex; gap: 10px; align-items: center; }
 .run-btn {
   background: var(--accent);
   color: #000;
@@ -169,10 +170,21 @@ body {
   letter-spacing: 0.05em;
   cursor: pointer;
   transition: all 0.2s;
-  align-self: flex-start;
 }
 .run-btn:hover { background: #00f0c0; transform: translateY(-1px); }
 .run-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+.share-btn {
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 12px 18px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.share-btn:hover { color: var(--text); border-color: var(--accent); }
 
 /* ── Error / Loading ── */
 .error-box {
