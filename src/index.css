@@ -348,6 +348,45 @@ body {
 .nav-btn:hover { color: var(--text); }
 .nav-active { background: var(--accent); border-color: transparent; color: #000; font-weight: 700; }
 
+/* ── Date-period compact row (shared) ── */
+.date-period-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: nowrap;
+}
+.date-field {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.date-field-label {
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.input-compact {
+  width: 130px;
+  padding: 7px 10px;
+  font-size: 12px;
+}
+.period-divider {
+  width: 1px;
+  height: 22px;
+  background: var(--border2);
+  flex-shrink: 0;
+}
+.period-chips-inline {
+  display: flex;
+  gap: 5px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+}
+.period-chips-inline::-webkit-scrollbar { display: none; }
+
 /* ── Scan ── */
 .scan-section { display: flex; flex-direction: column; gap: 20px; }
 .scan-controls {

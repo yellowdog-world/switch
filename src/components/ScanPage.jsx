@@ -49,19 +49,26 @@ const getInitialParams = () => {
   const p = new URLSearchParams(window.location.search);
   if (p.get("mode") === "scan" || !p.get("mode")) {
     const cats = p.get("categories") ? p.get("categories").split(",") : ["us3x"];
+    const periodKey = p.get("period") || "1y";
+    const defaultDates = getPeriodDates(periodKey);
     return {
-      period: p.get("period") || "1y",
+      period: periodKey,
+      from: p.get("from") || defaultDates.from,
+      to: p.get("to") || defaultDates.to,
       categories: cats,
       investment: Number(p.get("investment") || defaultInvestmentFor(cats)),
       porang: Number(p.get("porang") || 15),
     };
   }
-  return { period: "1y", categories: ["us3x"], investment: DEFAULT_USD, porang: 15 };
+  const defaultDates = getPeriodDates("1y");
+  return { period: "1y", ...defaultDates, categories: ["us3x"], investment: DEFAULT_USD, porang: 15 };
 };
 
 export default function ScanPage() {
   const init = getInitialParams();
   const [period, setPeriod] = useState(init.period);
+  const [from, setFrom] = useState(init.from);
+  const [to, setTo] = useState(init.to);
   const [categories, setCategories] = useState(init.categories);
   const [investment, setInvestment] = useState(init.investment);
   const [porang, setPorang] = useState(init.porang);
@@ -72,6 +79,13 @@ export default function ScanPage() {
   const [failCount, setFailCount] = useState(0);
   const abortRef = useRef(false);
 
+  function applyPeriod(key) {
+    const { from: f, to: t } = getPeriodDates(key);
+    setPeriod(key);
+    setFrom(f);
+    setTo(t);
+  }
+
   async function runScan() {
     abortRef.current = false;
     const tickers = [...new Set(categories.flatMap(c => SCAN_LISTS[c].tickers))];
@@ -79,8 +93,6 @@ export default function ScanPage() {
     setResults([]);
     setFailCount(0);
     setProgress({ done: 0, total: tickers.length });
-
-    const { from, to } = getPeriodDates(period);
     const collected = [];
     let fails = 0;
 
@@ -110,7 +122,7 @@ export default function ScanPage() {
   const pct = progress.total ? Math.round((progress.done / progress.total) * 100) : 0;
 
   function copyLink() {
-    const params = new URLSearchParams({ mode: "scan", period, categories: categories.join(","), investment, porang });
+    const params = new URLSearchParams({ mode: "scan", period, from, to, categories: categories.join(","), investment, porang });
     const url = `${window.location.origin}${window.location.pathname}?${params}`;
     navigator.clipboard.writeText(url).then(() => {
       setCopied(true);
@@ -128,11 +140,24 @@ export default function ScanPage() {
       <div className="scan-controls">
         <div className="scan-control-group">
           <span className="scan-label">기간</span>
-          <div className="scan-chips">
-            {PERIODS.map(p => (
-              <button key={p.key} className={`chip ${period === p.key ? "chip-active" : ""}`}
-                onClick={() => setPeriod(p.key)} disabled={scanning}>{p.label}</button>
-            ))}
+          <div className="date-period-row">
+            <div className="date-field">
+              <span className="date-field-label">시작일</span>
+              <input className="input input-compact" type="date" value={from}
+                onChange={e => { setFrom(e.target.value); setPeriod(""); }} disabled={scanning} />
+            </div>
+            <div className="date-field">
+              <span className="date-field-label">종료일</span>
+              <input className="input input-compact" type="date" value={to}
+                onChange={e => { setTo(e.target.value); setPeriod(""); }} disabled={scanning} />
+            </div>
+            <div className="period-divider" />
+            <div className="period-chips-inline">
+              {PERIODS.map(p => (
+                <button key={p.key} className={`chip ${period === p.key ? "chip-active" : ""}`}
+                  onClick={() => applyPeriod(p.key)} disabled={scanning}>{p.label}</button>
+              ))}
+            </div>
           </div>
         </div>
 

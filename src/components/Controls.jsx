@@ -86,6 +86,7 @@ export default function Controls({ onRun, loading }) {
   const [symbol, setSymbol] = useState(initial.symbol);
   const [from, setFrom] = useState(initial.from);
   const [to, setTo] = useState(initial.to);
+  const [activePeriod, setActivePeriod] = useState("");
   const [investment, setInvestment] = useState(initial.investment);
   const [porang, setPorang] = useState(initial.porang ?? 15);
   const [copied, setCopied] = useState(false);
@@ -123,6 +124,7 @@ export default function Controls({ onRun, loading }) {
     saveValues(next);
     setFrom(f);
     setTo(t);
+    setActivePeriod(key);
   };
 
   const copyLink = () => {
@@ -183,39 +185,28 @@ export default function Controls({ onRun, loading }) {
         </div>
 
         <div className="control-group">
-          <div className="control-row">
-            <div className="control-group">
-              <label>시작일</label>
-              <input
-                className="input"
-                type="date"
-                value={from}
-                onChange={e => update("from", e.target.value)}
-                required
-              />
+          <label>기간</label>
+          <div className="date-period-row">
+            <div className="date-field">
+              <span className="date-field-label">시작일</span>
+              <input className="input input-compact" type="date" value={from}
+                onChange={e => { update("from", e.target.value); setActivePeriod(""); }} required />
             </div>
-            <div className="control-group">
-              <label>종료일</label>
-              <input
-                className="input"
-                type="date"
-                value={to}
-                onChange={e => update("to", e.target.value)}
-                required
-              />
+            <div className="date-field">
+              <span className="date-field-label">종료일</span>
+              <input className="input input-compact" type="date" value={to}
+                onChange={e => { update("to", e.target.value); setActivePeriod(""); }} required />
             </div>
-          </div>
-          <div className="quick-symbols">
-            {PERIODS.map(p => (
-              <button
-                key={p.key}
-                type="button"
-                className="chip"
-                onClick={() => applyPeriod(p.key)}
-              >
-                {p.label}
-              </button>
-            ))}
+            <div className="period-divider" />
+            <div className="period-chips-inline">
+              {PERIODS.map(p => (
+                <button key={p.key} type="button"
+                  className={`chip ${activePeriod === p.key ? "chip-active" : ""}`}
+                  onClick={() => applyPeriod(p.key)}>
+                  {p.label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
