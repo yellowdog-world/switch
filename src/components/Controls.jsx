@@ -154,34 +154,32 @@ export default function Controls({ onRun, loading }) {
         </div>
 
         <div className="control-group">
+          <label>투자금 (USD)</label>
           <div className="investment-row">
-            <div className="control-group" style={{ flex: 1 }}>
-              <label>투자금 (USD)</label>
-              <div className="input-prefix-wrap">
-                <span className="input-prefix">$</span>
-                <input
-                  className="input input-prefixed"
-                  type="number"
-                  value={investment}
-                  onChange={e => update("investment", e.target.value)}
-                  min={1500}
-                  step={100}
-                  required
-                />
-              </div>
-            </div>
-            <div className="control-group control-group-narrow">
-              <label>분할 수 (포랭)</label>
+            <div className="input-prefix-wrap" style={{ flex: 1 }}>
+              <span className="input-prefix">$</span>
               <input
-                className="input"
+                className="input input-prefixed"
                 type="number"
-                value={porang}
-                onChange={e => update("porang", Math.max(1, Math.min(30, Number(e.target.value))))}
-                min={1}
-                max={30}
+                value={investment}
+                onChange={e => update("investment", e.target.value)}
+                min={1500}
+                step={100}
                 required
               />
             </div>
+            <span className="investment-divider">÷</span>
+            <input
+              className="input porang-input"
+              type="number"
+              value={porang}
+              onChange={e => update("porang", Math.max(1, Math.min(30, Number(e.target.value))))}
+              min={1}
+              max={30}
+              required
+              title="분할 수 (포랭)"
+            />
+            <span className="investment-unit">분할</span>
           </div>
           <div className="hint">1회 매수금액: ${Math.floor(investment / porang).toLocaleString()}</div>
         </div>
