@@ -14,7 +14,7 @@
 
 const MAX_PORANG = 15;
 
-export function runBacktest(prices, investmentUSD) {
+export function runBacktest(prices, investmentUSD, startFrom = null) {
   const unitAmount = investmentUSD / MAX_PORANG; // 1회 매수금액
 
   // 상태
@@ -29,12 +29,17 @@ export function runBacktest(prices, investmentUSD) {
   const dailyLog = [];
   const cycles = [];
 
-  let cycleStartIdx = 0;
+  // startFrom 이전 데이터는 어제종가 확보용 lookback으로만 사용
+  const startIdx = startFrom
+    ? Math.max(prices.findIndex(p => p.date >= startFrom), 0)
+    : 0;
+
+  let cycleStartIdx = startIdx;
   let cycleStartCash = cash;
   let dongCount = 0;
   let currentCycleNum = 1;
 
-  for (let i = 0; i < prices.length; i++) {
+  for (let i = startIdx; i < prices.length; i++) {
     const today = prices[i];
     const yesterday = prices[i - 1];
 

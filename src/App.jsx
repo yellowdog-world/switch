@@ -30,10 +30,8 @@ export default function App() {
       if (!data.prices || data.prices.length < 2)
         throw new Error("해당 기간 데이터가 부족합니다.");
 
-      const backtestResult = runBacktest(data.prices, investment);
-
-      // 사용자가 선택한 from 이전 날짜는 표시에서 제거
-      backtestResult.dailyLog = backtestResult.dailyLog.filter(d => d.date >= from);
+      // from을 넘겨 lookback 데이터는 어제종가 확보용으로만 쓰고 시뮬레이션은 from부터 시작
+      const backtestResult = runBacktest(data.prices, investment, from);
 
       setResult(backtestResult);
       setParams({ symbol, from, to, investment });
