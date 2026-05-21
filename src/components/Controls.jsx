@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 const POPULAR = ["SOXL", "AAPL", "TSLA", "NVDA", "SPY", "QQQ", "TQQQ"];
+const STORAGE_KEY = "yd_controls";
 
 const getDefaultDates = () => {
   const today = new Date();
@@ -13,12 +14,38 @@ const getDefaultDates = () => {
   };
 };
 
+const loadSaved = () => {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return saved ? JSON.parse(saved) : null;
+  } catch {
+    return null;
+  }
+};
+
+const saveValues = (values) => {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(values));
+  } catch {}
+};
+
 export default function Controls({ onRun, loading }) {
   const { from: defaultFrom, to: defaultTo } = getDefaultDates();
-  const [symbol, setSymbol] = useState("SOXL");
-  const [from, setFrom] = useState(defaultFrom);
-  const [to, setTo] = useState(defaultTo);
-  const [investment, setInvestment] = useState(15000);
+  const saved = loadSaved();
+
+  const [symbol, setSymbol] = useState(saved?.symbol ?? "SOXL");
+  const [from, setFrom] = useState(saved?.from ?? defaultFrom);
+  const [to, setTo] = useState(saved?.to ?? defaultTo);
+  const [investment, setInvestment] = useState(saved?.investment ?? 15000);
+
+  const update = (field, value) => {
+    const next = { symbol, from, to, investment, [field]: value };
+    saveValues(next);
+    if (field === "symbol") setSymbol(value);
+    if (field === "from") setFrom(value);
+    if (field === "to") setTo(value);
+    if (field === "investment") setInvestment(value);
+  };
 
   function handleSubmit(e) {
     e.preventDefault();
@@ -35,7 +62,7 @@ export default function Controls({ onRun, loading }) {
           <input
             className="input"
             value={symbol}
-            onChange={e => setSymbol(e.target.value.toUpperCase())}
+            onChange={e => update("symbol", e.target.value.toUpperCase())}
             placeholder="예: SOXL"
             required
           />
@@ -45,7 +72,7 @@ export default function Controls({ onRun, loading }) {
                 key={s}
                 type="button"
                 className={`chip ${symbol === s ? "chip-active" : ""}`}
-                onClick={() => setSymbol(s)}
+                onClick={() => update("symbol", s)}
               >
                 {s}
               </button>
@@ -60,7 +87,7 @@ export default function Controls({ onRun, loading }) {
               className="input"
               type="date"
               value={from}
-              onChange={e => setFrom(e.target.value)}
+              onChange={e => update("from", e.target.value)}
               required
             />
           </div>
@@ -70,7 +97,7 @@ export default function Controls({ onRun, loading }) {
               className="input"
               type="date"
               value={to}
-              onChange={e => setTo(e.target.value)}
+              onChange={e => update("to", e.target.value)}
               required
             />
           </div>
@@ -84,7 +111,7 @@ export default function Controls({ onRun, loading }) {
               className="input input-prefixed"
               type="number"
               value={investment}
-              onChange={e => setInvestment(e.target.value)}
+              onChange={e => update("investment", e.target.value)}
               min={1500}
               step={100}
               required
