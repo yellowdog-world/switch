@@ -99,8 +99,7 @@ export function runBacktest(prices, investmentUSD, startFrom = null) {
     // ── 2. 업다운 매도 ──────────────────────────────
     // 매수와 같은 날 매도는 하지 않음
     if (!updownBuy && port > 0 && lp !== null && today.close >= lp) {
-      const currentPorang = port + rankBundles.length;
-      const sellShares = Math.floor(totalShares / currentPorang);
+      const sellShares = Math.floor(totalShares / port);
       const sellAmount = sellShares * today.close;
       totalShares -= sellShares;
       cash += sellAmount;
