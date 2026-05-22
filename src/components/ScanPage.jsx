@@ -70,7 +70,7 @@ export default function ScanPage() {
   const [from, setFrom] = useState(init.from);
   const [to, setTo] = useState(init.to);
   const [categories, setCategories] = useState(init.categories);
-  const [investment, setInvestment] = useState(init.investment);
+  const [investment, setInvestment] = useState(String(init.investment));
   const [porang, setPorang] = useState(init.porang);
   const [scanning, setScanning] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -101,7 +101,7 @@ export default function ScanPage() {
       if (abortRef.current) break;
       const batch = tickers.slice(i, i + BATCH);
       const settled = await Promise.allSettled(
-        batch.map(sym => scanOne(sym, from, to, investment, porang))
+        batch.map(sym => scanOne(sym, from, to, Number(investment) || 0, porang))
       );
       for (const r of settled) {
         if (r.status === "fulfilled" && r.value) {
@@ -120,6 +120,9 @@ export default function ScanPage() {
 
   const tickers = [...new Set(categories.flatMap(c => SCAN_LISTS[c].tickers))];
   const pct = progress.total ? Math.round((progress.done / progress.total) * 100) : 0;
+  const hasKR = categories.includes("kr");
+  const hasUS = categories.some(c => c !== "kr");
+  const scanPrefix = hasKR && hasUS ? "" : hasKR ? "₩" : "$";
 
   function copyLink() {
     const params = new URLSearchParams({ mode: "scan", period, from, to, categories: categories.join(","), investment, porang });
@@ -172,8 +175,8 @@ export default function ScanPage() {
                     const next = prev.includes(key)
                       ? prev.length > 1 ? prev.filter(c => c !== key) : prev
                       : [...prev, key];
-                    if (isKoreanOnly(next)) setInvestment(DEFAULT_KRW);
-                    else if (isKoreanOnly(prev)) setInvestment(DEFAULT_USD);
+                    if (isKoreanOnly(next)) setInvestment(String(DEFAULT_KRW));
+                    else if (isKoreanOnly(prev)) setInvestment(String(DEFAULT_USD));
                     return next;
                   });
                 }}
@@ -185,21 +188,29 @@ export default function ScanPage() {
         <div className="scan-control-group">
           <span className="scan-label">투자금 / 분할</span>
           <div className="investment-row">
-            <div className="input-prefix-wrap" style={{ flex: 1 }}>
-              <span className="input-prefix">{isKoreanOnly(categories) ? "₩" : "$"}</span>
-              <input className="input input-prefixed" type="number" value={investment}
-                onChange={e => setInvestment(Number(e.target.value))}
-                min={isKoreanOnly(categories) ? 150000 : 1500}
-                step={isKoreanOnly(categories) ? 10000 : 100}
-                disabled={scanning || isKoreanOnly(categories)} />
-            </div>
+            {scanPrefix ? (
+              <div className="input-prefix-wrap" style={{ flex: 1 }}>
+                <span className="input-prefix">{scanPrefix}</span>
+                <input className="input input-prefixed" type="number" value={investment}
+                  onChange={e => setInvestment(e.target.value)}
+                  min={hasKR && !hasUS ? 150000 : 1500}
+                  step={hasKR && !hasUS ? 10000 : 100}
+                  placeholder={hasKR && !hasUS ? "15000000" : "15000"}
+                  disabled={scanning || isKoreanOnly(categories)} />
+              </div>
+            ) : (
+              <input className="input" style={{ flex: 1 }} type="number" value={investment}
+                onChange={e => setInvestment(e.target.value)}
+                min={1500} step={100} placeholder="15000"
+                disabled={scanning} />
+            )}
             <span className="investment-divider">÷</span>
             <input className="input porang-input" type="number" value={porang}
               onChange={e => setPorang(Math.max(1, Math.min(30, Number(e.target.value))))}
               min={1} max={30} disabled={scanning} />
             <span className="investment-unit">분할</span>
           </div>
-          <span className="hint">1회 매수금액: {isKoreanOnly(categories) ? "₩" : "$"}{Math.floor(investment / porang).toLocaleString()}</span>
+          <span className="hint">{scanPrefix}{investment ? Math.floor(Number(investment) / porang).toLocaleString() : "-"}</span>
         </div>
 
         <div className="scan-actions">

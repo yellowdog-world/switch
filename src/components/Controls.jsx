@@ -87,7 +87,7 @@ export default function Controls({ onRun, loading }) {
   const [from, setFrom] = useState(initial.from);
   const [to, setTo] = useState(initial.to);
   const [activePeriod, setActivePeriod] = useState("");
-  const [investment, setInvestment] = useState(initial.investment);
+  const [investment, setInvestment] = useState(String(initial.investment));
   const [porang, setPorang] = useState(initial.porang ?? 15);
   const [copied, setCopied] = useState(false);
 
@@ -104,12 +104,12 @@ export default function Controls({ onRun, loading }) {
       const wasKorean = isKoreanSymbol(symbol);
       const willBeKorean = isKoreanSymbol(value);
       if (wasKorean !== willBeKorean) {
-        const prevDefault = wasKorean ? DEFAULT_KRW : DEFAULT_USD;
-        if (investment === prevDefault) nextInvestment = willBeKorean ? DEFAULT_KRW : DEFAULT_USD;
+        const prevDefault = String(wasKorean ? DEFAULT_KRW : DEFAULT_USD);
+        if (investment === prevDefault) nextInvestment = String(willBeKorean ? DEFAULT_KRW : DEFAULT_USD);
       }
     }
-    const next = { symbol, from, to, investment: nextInvestment, porang, [field]: value };
-    if (field !== "investment") next.investment = nextInvestment;
+    const next = { symbol, from, to, investment: Number(nextInvestment) || 0, porang, [field]: value };
+    if (field !== "investment") next.investment = Number(nextInvestment) || 0;
     saveValues(next);
     if (field === "symbol") { setSymbol(value); if (nextInvestment !== investment) setInvestment(nextInvestment); }
     if (field === "from") setFrom(value);
@@ -222,6 +222,7 @@ export default function Controls({ onRun, loading }) {
                 onChange={e => update("investment", e.target.value)}
                 min={isKoreanSymbol(symbol) ? 150000 : 1500}
                 step={isKoreanSymbol(symbol) ? 10000 : 100}
+                placeholder={isKoreanSymbol(symbol) ? "15000000" : "15000"}
                 required
               />
             </div>
@@ -238,7 +239,7 @@ export default function Controls({ onRun, loading }) {
             />
             <span className="investment-unit">분할</span>
           </div>
-          <div className="hint">1회 매수금액: {isKoreanSymbol(symbol) ? "₩" : "$"}{Math.floor(investment / porang).toLocaleString()}</div>
+          <div className="hint">1회 매수금액: {isKoreanSymbol(symbol) ? "₩" : "$"}{investment ? Math.floor(Number(investment) / porang).toLocaleString() : "-"}</div>
         </div>
 
         <div className="controls-actions">
