@@ -504,7 +504,47 @@ body {
 .compare-hint { font-size: 11px; color: var(--muted); }
 
 @media (max-width: 640px) {
-  .main { padding: 16px 12px 60px; }
+  html { font-size: 13px; }
+
+  /* Header */
+  .header-inner { padding: 10px 14px; }
+  .logo-title { font-size: 13px; }
+  .logo-sub { display: none; }
+  .logo-mark { width: 30px; height: 30px; font-size: 15px; }
+  .nav-btn { padding: 7px 14px; font-size: 12px; }
+
+  /* Main */
+  .main { padding: 14px 12px 60px; gap: 16px; }
   .control-row { grid-template-columns: 1fr; }
   .stats-grid { grid-template-columns: 1fr 1fr; }
+
+  /* Date-period row: 날짜 두 개 나란히, 칩은 아래 별도 줄 */
+  .date-period-row {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .date-field { flex: 1; min-width: 120px; }
+  .input-compact { width: 100%; font-size: 12px; }
+  .period-divider { display: none; }
+  .period-chips-inline {
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+
+  /* Scan controls */
+  .scan-chips { flex-wrap: wrap; }
+  .scan-control-group { gap: 6px; }
+
+  /* Investment row */
+  .investment-row { flex-wrap: wrap; }
+  .investment-row .input-prefix-wrap { min-width: 0; }
+
+  /* Table */
+  .data-table { font-size: 11px; }
+  .scan-name { max-width: 100px; }
+
+  /* Charts */
+  .chart-legend-bar { flex-wrap: wrap; gap: 6px; }
+  .compare-input-wrap { flex-wrap: wrap; }
 }
