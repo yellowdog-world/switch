@@ -44,16 +44,19 @@ body {
   margin: 0 auto;
   padding: 14px 24px;
 }
-.logo { display: flex; align-items: center; gap: 12px; }
-.logo-mark {
-  width: 36px; height: 36px;
-  background: var(--accent);
-  color: #000;
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: 18px;
+.logo { display: flex; align-items: center; gap: 10px; }
+.logo-icon {
+  flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;
-  border-radius: 8px;
+  width: 40px; height: 40px;
+}
+/* 로고 텍스트: 모바일 스크롤 시 접힘 */
+.logo-text {
+  overflow: hidden;
+  white-space: nowrap;
+  max-width: 240px;
+  opacity: 1;
+  transition: max-width 0.28s ease, opacity 0.22s ease;
 }
 .logo-title {
   font-family: var(--font-display);
@@ -507,11 +510,14 @@ body {
   html { font-size: 13px; }
 
   /* Header */
-  .header-inner { padding: 10px 14px; }
-  .logo-title { font-size: 13px; }
+  .header-inner { padding: 8px 12px; }
+  .logo-icon { width: 34px; height: 34px; }
+  .logo-icon svg { width: 34px; height: 34px; }
+  .logo-title { font-size: 12px; }
   .logo-sub { display: none; }
-  .logo-mark { width: 30px; height: 30px; font-size: 15px; }
-  .nav-btn { padding: 7px 14px; font-size: 12px; }
+  .nav-btn { padding: 6px 10px; font-size: 11px; }
+  /* 스크롤하면 로고 텍스트 접기 */
+  .header-scrolled .logo-text { max-width: 0; opacity: 0; }
 
   /* Main */
   .main { padding: 14px 12px 60px; gap: 16px; }

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Controls from "./components/Controls";
 import Charts from "./components/Charts";
 import Summary from "./components/Summary";
@@ -7,17 +7,55 @@ import RollingPage from "./components/RollingPage";
 import { runBacktest } from "./engine/switchEngine";
 import { fetchPrices } from "./utils/stockCache";
 
+// 노란 진도개 얼굴 로고
+function DogLogo() {
+  return (
+    <svg viewBox="0 0 44 44" width="38" height="38" xmlns="http://www.w3.org/2000/svg">
+      {/* 왼쪽 귀 */}
+      <polygon points="9,26 14,6 21,20" fill="#F5C140"/>
+      <polygon points="11,24 15,10 19,20" fill="#F0A0A0" opacity="0.75"/>
+      {/* 오른쪽 귀 */}
+      <polygon points="35,26 30,6 23,20" fill="#F5C140"/>
+      <polygon points="33,24 29,10 25,20" fill="#F0A0A0" opacity="0.75"/>
+      {/* 얼굴 */}
+      <ellipse cx="22" cy="28" rx="15" ry="13" fill="#F5C140"/>
+      {/* 왼쪽 눈 */}
+      <circle cx="16.5" cy="25.5" r="2.8" fill="#1a1a1a"/>
+      <circle cx="17.3" cy="24.6" r="1" fill="white"/>
+      {/* 오른쪽 눈 */}
+      <circle cx="27.5" cy="25.5" r="2.8" fill="#1a1a1a"/>
+      <circle cx="28.3" cy="24.6" r="1" fill="white"/>
+      {/* 코 */}
+      <ellipse cx="22" cy="31" rx="3.2" ry="2.2" fill="#2a2020"/>
+      <ellipse cx="21" cy="30.2" rx="1" ry="0.6" fill="rgba(255,255,255,0.25)"/>
+      {/* 입 */}
+      <path d="M18.5,34 Q22,37.5 25.5,34" stroke="#2a2020" strokeWidth="1.4" fill="none" strokeLinecap="round"/>
+      {/* 볼 터치 */}
+      <circle cx="12.5" cy="30" r="4" fill="#F08060" opacity="0.35"/>
+      <circle cx="31.5" cy="30" r="4" fill="#F08060" opacity="0.35"/>
+    </svg>
+  );
+}
+
 export default function App() {
   const [mode, setMode] = useState(() => {
     const p = new URLSearchParams(window.location.search);
-    if (p.get("mode") === "backtest" || p.get("symbol")) return "backtest";
-    return "scan";
+    if (p.get("mode") === "rolling") return "rolling";
+    if (p.get("mode") === "scan") return "scan";
+    return "backtest"; // 기본 페이지
   });
+  const [scrolled, setScrolled] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [result, setResult] = useState(null);
   const [params, setParams] = useState(null);
   const [rawPrices, setRawPrices] = useState(null); // 롤링 분석용 원본 가격 데이터
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 30);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   async function handleRun({ symbol, from, to, investment, porang = 15 }) {
     setLoading(true);
@@ -51,20 +89,20 @@ export default function App() {
 
   return (
     <div className="app">
-      <header className="header">
+      <header className={`header${scrolled ? " header-scrolled" : ""}`}>
         <div className="header-inner">
           <div className="header-top">
             <div className="logo">
-              <span className="logo-mark">S</span>
-              <div>
+              <div className="logo-icon"><DogLogo /></div>
+              <div className="logo-text">
                 <div className="logo-title">YELLOWDOG METHOD</div>
                 <div className="logo-sub">Backtest Engine</div>
               </div>
             </div>
             <nav className="main-nav">
-              <button className={`nav-btn ${mode === "scan" ? "nav-active" : ""}`} onClick={() => setMode("scan")}>종목 스캔</button>
               <button className={`nav-btn ${mode === "backtest" ? "nav-active" : ""}`} onClick={() => setMode("backtest")}>백테스트</button>
               <button className={`nav-btn ${mode === "rolling" ? "nav-active" : ""}`} onClick={() => setMode("rolling")}>롤링 분석</button>
+              <button className={`nav-btn ${mode === "scan" ? "nav-active" : ""}`} onClick={() => setMode("scan")}>종목 스캔</button>
             </nav>
           </div>
         </div>
