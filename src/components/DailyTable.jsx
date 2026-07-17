@@ -54,9 +54,9 @@ export default function DailyTable({ dailyLog }) {
               <th>날짜</th>
               <th>종가</th>
               <th>LP</th>
+              <th>포랭</th>
               <th>포트</th>
               <th>랭크</th>
-              <th>포랭</th>
               <th>평가액</th>
               <th>수익률</th>
               <th>사이클</th>
@@ -69,9 +69,9 @@ export default function DailyTable({ dailyLog }) {
                 <td>{d.date}</td>
                 <td>${d.close.toFixed(2)}</td>
                 <td>{d.lp ? `$${d.lp.toFixed(2)}` : "-"}</td>
+                <td className={d.porang > 10 ? "val-warn" : ""}>{d.porang}</td>
                 <td className={d.port > 0 ? "val-blue" : ""}>{d.port}</td>
                 <td className={d.rank > 0 ? "val-pink" : ""}>{d.rank}</td>
-                <td className={d.porang > 10 ? "val-warn" : ""}>{d.porang}</td>
                 <td>${d.totalValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
                 <td className={d.returnPct >= 0 ? "val-green" : "val-red"}>
                   {d.returnPct >= 0 ? "+" : ""}{d.returnPct.toFixed(2)}%
