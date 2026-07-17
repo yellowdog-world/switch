@@ -1,4 +1,4 @@
-const PREFIX = "yd_stock_";
+const PREFIX = "yd_stock_v2_";
 
 export async function fetchPrices(symbol, from, to) {
   const key = `${PREFIX}${symbol}_${from}_${to}`;
