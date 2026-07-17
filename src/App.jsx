@@ -91,7 +91,7 @@ export default function App() {
             {result && params && (
               <>
                 <Summary summary={result.summary} params={params} />
-                <Charts dailyLog={result.dailyLog} cycles={result.cycles} symbol={params.symbol} symbolName={params.symbolName} maxPorang={params.porang} prices={rawPrices} investment={params.investment} />
+                <Charts dailyLog={result.dailyLog} cycles={result.cycles} symbol={params.symbol} symbolName={params.symbolName} maxPorang={params.porang} prices={rawPrices} investment={params.investment} from={params.from} to={params.to} />
               </>
             )}
           </>
