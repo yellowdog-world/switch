@@ -77,10 +77,13 @@ export default function RollingChart({ prices, investment, maxPorang, from, to }
 
       const result = runBacktest(prices, investment, curStr, maxPorang);
 
+      const ret = result.summary.totalReturn;
       out.push({
         startDate: curStr,
         label: curStr.slice(2, 10), // YY-MM-DD
-        totalReturn: result.summary.totalReturn,
+        totalReturn: ret,
+        positiveReturn: Math.max(0, ret), // 양수 영역만 (0 이하는 0)
+        negativeReturn: Math.min(0, ret), // 음수 영역만 (0 이상은 0)
         maxDrawdown: result.summary.maxDrawdown,
         totalCycles: result.summary.totalCycles,
         dongCount: result.summary.dongCount,
@@ -211,12 +214,6 @@ export default function RollingChart({ prices, investment, maxPorang, from, to }
         <div className="rolling-chart-title">수익률 추세선 — 시작 시점에 따른 흐름</div>
         <ResponsiveContainer width="100%" height={200}>
           <AreaChart data={results} margin={{ top: 8, right: 16, left: 0, bottom: 48 }}>
-            <defs>
-              <linearGradient id="rollingAreaGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#00d4aa" stopOpacity={0.25} />
-                <stop offset="95%" stopColor="#00d4aa" stopOpacity={0.02} />
-              </linearGradient>
-            </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
             <XAxis
               dataKey="label"
@@ -233,19 +230,19 @@ export default function RollingChart({ prices, investment, maxPorang, from, to }
               contentStyle={{ background: "#1a1a2e", border: "1px solid #333", borderRadius: 8, color: "#e0e0e0" }}
               labelStyle={{ color: "#aaa" }}
               itemStyle={{ color: "#e0e0e0" }}
-              formatter={(v) => [`${v >= 0 ? "+" : ""}${v.toFixed(2)}%`, "수익률"]}
+              formatter={(v, name) => name === "totalReturn" ? [`${v >= 0 ? "+" : ""}${v.toFixed(2)}%`, "수익률"] : null}
               labelFormatter={(l) => `시작: 20${l}`}
             />
             <ReferenceLine y={0} stroke="rgba(255,255,255,0.3)" strokeDasharray="4 3" />
-            <Area
-              type="monotone"
-              dataKey="totalReturn"
-              stroke="#00d4aa"
-              strokeWidth={2}
-              fill="url(#rollingAreaGrad)"
-              dot={false}
-              activeDot={{ r: 4, fill: "#00d4aa" }}
-            />
+            {/* 양수 영역: 초록 채움 */}
+            <Area type="monotone" dataKey="positiveReturn" stroke="none"
+              fill="#34d399" fillOpacity={0.25} baseValue={0} legendType="none" />
+            {/* 음수 영역: 빨강 채움 */}
+            <Area type="monotone" dataKey="negativeReturn" stroke="none"
+              fill="#f87171" fillOpacity={0.25} baseValue={0} legendType="none" />
+            {/* 수익률 라인 */}
+            <Area type="monotone" dataKey="totalReturn" stroke="#00d4aa"
+              strokeWidth={2} fill="none" dot={false} activeDot={{ r: 4, fill: "#00d4aa" }} />
           </AreaChart>
         </ResponsiveContainer>
       </div>
