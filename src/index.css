@@ -50,13 +50,11 @@ body {
   display: flex; align-items: center; justify-content: center;
   width: 40px; height: 40px;
 }
-/* 로고 텍스트: 모바일 스크롤 시 접힘 */
+/* 로고 텍스트: 모바일 스크롤 시 페이드 아웃 (width는 유지해 nav 이동 방지) */
 .logo-text {
-  overflow: hidden;
   white-space: nowrap;
-  max-width: 240px;
   opacity: 1;
-  transition: max-width 0.28s ease, opacity 0.22s ease;
+  transition: opacity 0.22s ease;
 }
 .logo-title {
   font-family: var(--font-display);
@@ -516,8 +514,8 @@ body {
   .logo-title { font-size: 12px; }
   .logo-sub { display: none; }
   .nav-btn { padding: 6px 10px; font-size: 11px; }
-  /* 스크롤하면 로고 텍스트 접기 */
-  .header-scrolled .logo-text { max-width: 0; opacity: 0; }
+  /* 스크롤하면 로고 텍스트 페이드아웃 (width 유지 → nav 위치 고정) */
+  .header-scrolled .logo-text { opacity: 0; pointer-events: none; }
 
   /* Main */
   .main { padding: 14px 12px 60px; gap: 16px; }

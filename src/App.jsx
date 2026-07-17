@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Controls from "./components/Controls";
 import Charts from "./components/Charts";
 import Summary from "./components/Summary";
@@ -44,7 +44,7 @@ export default function App() {
     if (p.get("mode") === "scan") return "scan";
     return "backtest"; // 기본 페이지
   });
-  const [scrolled, setScrolled] = useState(false);
+  const headerRef = useRef(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [result, setResult] = useState(null);
@@ -52,7 +52,10 @@ export default function App() {
   const [rawPrices, setRawPrices] = useState(null); // 롤링 분석용 원본 가격 데이터
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 30);
+    // React state 대신 DOM 직접 조작 → 스크롤 중 리렌더링 없음
+    const onScroll = () => {
+      headerRef.current?.classList.toggle("header-scrolled", window.scrollY > 30);
+    };
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
@@ -89,7 +92,7 @@ export default function App() {
 
   return (
     <div className="app">
-      <header className={`header${scrolled ? " header-scrolled" : ""}`}>
+      <header className="header" ref={headerRef}>
         <div className="header-inner">
           <div className="header-top">
             <div className="logo">
