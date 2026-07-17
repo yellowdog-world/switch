@@ -87,6 +87,9 @@ export default function Controls({ onRun, loading }) {
   const [from, setFrom] = useState(initial.from);
   const [to, setTo] = useState(initial.to);
   const [activePeriod, setActivePeriod] = useState("");
+  // investment/porang을 string으로 관리하는 이유:
+  // Number 상태면 빈 칸을 지웠을 때 Number("") = 0이 되어 "0"이 남음.
+  // string으로 두면 완전히 비워진 상태를 유지할 수 있음.
   const [investment, setInvestment] = useState(String(initial.investment));
   const [porang, setPorang] = useState(String(initial.porang ?? 15));
   const [copied, setCopied] = useState(false);
@@ -104,6 +107,8 @@ export default function Controls({ onRun, loading }) {
       const wasKorean = isKoreanSymbol(symbol);
       const willBeKorean = isKoreanSymbol(value);
       if (wasKorean !== willBeKorean) {
+        // 종목 변경 시 통화가 바뀌면(USD↔KRW) 투자금 기본값도 자동 전환.
+        // 단, 사용자가 직접 바꾼 값은 건드리지 않고 기본값 그대로인 경우만 전환.
         const prevDefault = String(wasKorean ? DEFAULT_KRW : DEFAULT_USD);
         if (investment === prevDefault) nextInvestment = String(willBeKorean ? DEFAULT_KRW : DEFAULT_USD);
       }

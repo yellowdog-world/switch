@@ -14,6 +14,10 @@ export default async function handler(req, res) {
   }
 
   const period1 = Math.floor(new Date(from).getTime() / 1000);
+
+  // Yahoo Finance의 period2는 exclusive(해당 날짜 제외)라서
+  // to 날짜의 데이터를 포함하려면 +1일을 해줘야 함.
+  // 예: to=2026-07-17이면 period2를 7/18로 설정해야 7/17 종가가 내려옴.
   const toDate = new Date(to);
   toDate.setDate(toDate.getDate() + 1);
   const period2 = Math.floor(toDate.getTime() / 1000);

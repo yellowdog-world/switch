@@ -23,6 +23,10 @@ function ActionText({ action }) {
   );
 }
 
+// 컬럼 헤더에 마우스오버 툴팁을 붙이는 컴포넌트.
+// createPortal로 document.body에 렌더링하는 이유:
+//   .table-wrap에 overflow-x:auto가 있어서 position:absolute 툴팁이 잘려 보임.
+//   Portal로 body에 직접 붙이면 overflow 클리핑 없이 항상 화면 위에 뜸.
 function ColTip({ label, formula, desc, example }) {
   const [pos, setPos] = useState(null);
   const thRef = useRef();
@@ -51,6 +55,7 @@ function ColTip({ label, formula, desc, example }) {
   );
 }
 
+// maxPorang: 사용자가 설정한 분할 수. 포랭 경고색 기준(70%)을 동적으로 계산하기 위해 받음.
 export default function DailyTable({ dailyLog, maxPorang = 15 }) {
   const [filter, setFilter] = useState("all");
 
@@ -136,6 +141,7 @@ export default function DailyTable({ dailyLog, maxPorang = 15 }) {
                 <td>{d.date}</td>
                 <td>${d.close.toFixed(2)}</td>
                 <td>{d.lp ? `$${d.lp.toFixed(2)}` : "-"}</td>
+                {/* 포랭이 설정값의 70% 이상이면 경고색. 예: 15분할이면 11 이상 */}
                 <td className={d.porang >= maxPorang * 0.7 ? "val-warn" : ""}>{d.porang}</td>
                 <td className={d.port > 0 ? "val-blue" : ""}>{d.port}</td>
                 <td className={d.rank > 0 ? "val-pink" : ""}>{d.rank}</td>

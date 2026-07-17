@@ -1,57 +1,65 @@
 /**
  * 스위치법 백테스트 엔진
  *
- * 용어:
- *   포트(port)  - 업다운 매수 횟수
- *   랭크(rank)  - 떨법 묶음 수
- *   포랭        - 포트 + 랭크 (최대 15)
- *   LP          - 업다운 매수/매도 기준가
- *                 · 포트>0, 랭크=0 → 매일 어제종가로 갱신
- *                 · 업다운 미진입(lastUpdownPrice=null) → 어제종가
- *                 · 그 외 → lastUpdownPrice 고정
- *   lastUpdownPrice - 마지막 업다운 체결가 (W열)
+ * ── 용어 ──────────────────────────────────────────────────────────────
+ *   포트(port)  - 업다운 매수 횟수. 1회 매수금액 = 투자금 ÷ MAX_PORANG
+ *   랭크(rank)  - 떨법 묶음 수. 각 묶음은 독립적으로 매입가 이상이면 매도
+ *   포랭        - 포트 + 랭크. MAX_PORANG(기본 15)이 상한
+ *   LP          - 업다운 매수/매도 기준가. 상황에 따라 갱신 방식이 다름:
+ *                   포트>0 & 랭크=0 → 매일 어제종가로 갱신 (손실 없이 매도 기회 최대화)
+ *                   업다운 미진입   → 어제종가 (아직 시작 전)
+ *                   그 외          → lastUpdownPrice 고정 (랭크 보유 중엔 기준가 고정)
+ *   lastUpdownPrice - 마지막 업다운 체결가. 사이클 깔끔 종료 시 null 초기화
+ *
+ * ── 평단(avgCost) 계산 방식 ───────────────────────────────────────────
+ *   totalUpdownCost = 업다운으로 매수한 주식들의 총 매입원가 누계
+ *   매수할 때마다 += spent
+ *   매도할 때는 평균단가 기준으로 비례 차감: -= (avgCost × sellShares)
+ *     → FIFO가 아니라 평균 단가 방식을 쓰는 이유:
+ *       포트 1개씩 매도하는데 어느 묶음을 팔았는지 추적하지 않기 때문
+ *   똥 이월 시 rankBundles.amount도 totalUpdownCost에 합산:
+ *     → 랭크 묶음이 포트로 전환되므로 원가 추적에 포함해야 평단이 정확해짐
  */
 
 export function runBacktest(prices, investmentUSD, startFrom = null, maxPorang = 15) {
   const MAX_PORANG = maxPorang;
   const unitAmount = investmentUSD / MAX_PORANG; // 1회 매수금액
 
-  // 상태
+  // ── 상태 변수 ────────────────────────────────────────────────────────
   let port = 0;
-  let rankBundles = []; // [{ buyPrice, shares, amount }]
+  let rankBundles = []; // 떨법 묶음 배열. 각 원소: { buyPrice, shares, amount }
   let lp = null;
-  let lastUpdownPrice = null; // 마지막 업다운 체결가 (사이클 종료 시 null 초기화)
-  let totalShares = 0; // 업다운 보유 주식 수
-  let totalUpdownCost = 0; // 업다운 보유주식 총 매입원가
+  let lastUpdownPrice = null; // 마지막 업다운 체결가. 깔끔 종료 시 null 초기화
+  let totalShares = 0;        // 업다운 보유 주식 수 (포트 전체 합산)
+  let totalUpdownCost = 0;    // 업다운 보유 주식의 총 매입원가 (평단 계산용)
   let cash = investmentUSD;
 
-  // 결과 기록
   const dailyLog = [];
   const cycles = [];
 
-  // startFrom 이전 데이터는 어제종가 확보용 lookback으로만 사용
+  // startFrom 이전 데이터: 시뮬레이션에는 포함하지 않고,
+  // 첫날 LP 계산에 필요한 "어제 종가"를 확보하기 위한 lookback 용도로만 사용.
+  // (호출부에서 from 날짜보다 7일 먼저 데이터를 요청하는 이유)
   const startIdx = startFrom
     ? Math.max(prices.findIndex(p => p.date >= startFrom), 0)
     : 0;
 
   let cycleStartIdx = startIdx;
-  let cycleStartCash = cash;
+  let cycleStartCash = cash; // 각 사이클 시작 시점의 현금. 사이클 수익률 계산 기준
   let dongCount = 0;
   let currentCycleNum = 1;
 
   for (let i = startIdx; i < prices.length; i++) {
     const today = prices[i];
-    const yesterday = prices[i - 1];
+    const yesterday = prices[i - 1]; // startFrom 이전 데이터가 있어서 i=startIdx에서도 안전
 
-    // ── LP 재계산 (루프 시작 시) ──────────────────────
-    // 포트>0, 랭크=0: 업다운만 보유 → LP = 어제종가 (매일 갱신)
-    // 아직 업다운 매수 없음: LP = 어제종가
-    // 그 외: LP = lastUpdownPrice 고정
+    // ── LP 재계산 ─────────────────────────────────────────────────────
+    // 매일 루프 시작 시 LP를 결정. 이 값이 오늘의 매수/매도 판단 기준이 됨.
     if (yesterday) {
       if ((port > 0 && rankBundles.length === 0) || lastUpdownPrice === null) {
-        lp = yesterday.close;
+        lp = yesterday.close; // 포트만 있거나 미진입: 어제 종가로 매일 갱신
       } else {
-        lp = lastUpdownPrice;
+        lp = lastUpdownPrice; // 랭크 보유 중: 마지막 체결가 고정
       }
     }
 
@@ -63,12 +71,13 @@ export function runBacktest(prices, investmentUSD, startFrom = null, maxPorang =
     let updownSell = false;
     let tteobBuy = false;
     let tteobSells = [];
-    const rankCountBefore = rankBundles.length; // 오늘 새로 산 떨법 묶음 구분용
+    // 오늘 새로 매수한 떨법 묶음은 당일 매도 불가. bi >= rankCountBefore 인 묶음이 오늘 산 것.
+    const rankCountBefore = rankBundles.length;
 
-    // ── 1. 업다운 매수 ──────────────────────────────
+    // ── 1. 업다운 매수 ────────────────────────────────────────────────
     if (lp !== null) {
       if (lastUpdownPrice === null) {
-        // 최초 진입: 포랭 여유 있을 때만, 어제 종가 대비 10% 이내 (급등 제외)
+        // 최초 진입: 급등일(어제 대비 +10% 초과) 제외하고 포랭 여유 있으면 매수
         if (porang < MAX_PORANG && today.close <= yesterday.close * 1.10) {
           const shares = Math.floor(unitAmount / today.close);
           const spent = shares * today.close;
@@ -82,7 +91,8 @@ export function runBacktest(prices, investmentUSD, startFrom = null, maxPorang =
           action.push(`업다운 매수 (첫날) @${today.close.toFixed(2)}(${shares}주)`);
         }
       } else {
-        // 추가 매수: LP × (1 - 0.2% × 포랭) 이하
+        // 추가 매수 조건: 종가 ≤ LP × (1 - 0.2% × 현재포랭)
+        // 포랭이 높을수록 하락폭 기준이 커져서 더 내려가야 추가 매수
         const threshold = lp * (1 - 0.002 * porang);
         if (today.close <= threshold) {
           if (porang < MAX_PORANG) {
@@ -98,7 +108,9 @@ export function runBacktest(prices, investmentUSD, startFrom = null, maxPorang =
             updownBuy = true;
             action.push(`업다운 매수 (${porang + 1}차) @${today.close.toFixed(2)}(${shares}주)`);
           } else {
-            // 샀다치고: 포랭 꽉 참 → LP만 갱신
+            // 샀다치고: 포랭이 꽉 찼을 때 매수 조건이 충족되면
+            // 실제로 사지는 않고 LP만 오늘 종가로 낮춰서
+            // 이후 반등 시 이 가격 기준으로 매도가 발동되게 함
             lastUpdownPrice = today.close;
             lp = today.close;
             virtualBuy = true;
@@ -108,11 +120,13 @@ export function runBacktest(prices, investmentUSD, startFrom = null, maxPorang =
       }
     }
 
-    // ── 2. 업다운 매도 ──────────────────────────────
-    // 매수(실제/가상) 와 같은 날 매도는 하지 않음
+    // ── 2. 업다운 매도 ────────────────────────────────────────────────
+    // 매수와 같은 날은 매도하지 않음 (updownBuy, virtualBuy 체크)
+    // 종가 ≥ LP면 포트 1개 매도 (totalShares / port 주)
     if (!updownBuy && !virtualBuy && port > 0 && lp !== null && today.close >= lp) {
       const sellShares = Math.floor(totalShares / port);
       const sellAmount = sellShares * today.close;
+      // 평균 단가 기준으로 비례 차감: 매도 주식만큼의 원가를 제거
       totalUpdownCost -= (totalShares > 0 ? (totalUpdownCost / totalShares) * sellShares : 0);
       totalShares -= sellShares;
       cash += sellAmount;
@@ -123,9 +137,9 @@ export function runBacktest(prices, investmentUSD, startFrom = null, maxPorang =
       action.push(`업다운 매도 @${today.close.toFixed(2)}(${sellShares}주)`);
     }
 
-    // ── 3. 떨법 매수 ──────────────────────────────
-    // 조건: 하락일 + 오늘종가 ≤ 어제종가-0.01
-    // 매입가: 실제 체결 기준인 오늘 종가 (지정가 아닌 종가 기준)
+    // ── 3. 떨법 매수 ─────────────────────────────────────────────────
+    // 조건: 하락일 + 종가 ≤ 어제종가 - 0.01 + 포랭 여유 있음
+    // 어제종가 - 0.01짜리 지정가를 걸어뒀다고 가정, 오늘 종가로 체결
     const newPorang = port + rankBundles.length;
     if (yesterday && today.close < yesterday.close && newPorang < MAX_PORANG) {
       const orderPrice = yesterday.close - 0.01;
@@ -139,7 +153,9 @@ export function runBacktest(prices, investmentUSD, startFrom = null, maxPorang =
       }
     }
 
-    // ── 4. 떨법 매도 ── (오늘 새로 산 묶음은 당일 매도 제외)
+    // ── 4. 떨법 매도 ─────────────────────────────────────────────────
+    // 각 묶음 독립 판단: 오늘 종가 ≥ 해당 묶음 매입가면 매도
+    // 단, 오늘 새로 산 묶음(bi >= rankCountBefore)은 당일 매도 제외
     const remaining = [];
     for (let bi = 0; bi < rankBundles.length; bi++) {
       const bundle = rankBundles[bi];
@@ -155,16 +171,20 @@ export function runBacktest(prices, investmentUSD, startFrom = null, maxPorang =
     }
     rankBundles = remaining;
 
-    // ── 5. 사이클 종료 체크 ──────────────────────────
+    // ── 5. 사이클 종료 체크 ──────────────────────────────────────────
+    // 업다운 매도로 포트=0이 되면 사이클 종료
     let cycleEndPnlPct = null;
     let cycleEndNum = null;
     if (updownSell && port === 0) {
+      // 사이클 수익률 = 이번 사이클 동안의 현금 변화율
       const pnlPct = (cash - cycleStartCash) / cycleStartCash * 100;
       cycleEndPnlPct = parseFloat(pnlPct.toFixed(2));
       cycleEndNum = currentCycleNum;
 
       if (rankBundles.length > 0) {
-        // 똥 이월
+        // 똥 이월: 업다운은 다 팔았지만 떨법 묶음이 아직 남아 있는 경우
+        // 남은 랭크 묶음을 포트로 전환해서 다음 사이클로 넘김
+        // → 이 묶음들의 원가도 totalUpdownCost에 포함해야 평단 계산이 정확해짐
         dongCount += 1;
         const dongBundles = [...rankBundles];
         port = dongBundles.length;
@@ -185,7 +205,7 @@ export function runBacktest(prices, investmentUSD, startFrom = null, maxPorang =
         cycleStartIdx = i + 1;
         currentCycleNum += 1;
       } else {
-        // 깔끔 종료
+        // 깔끔 종료: 포트도 0, 랭크도 0 → lastUpdownPrice 초기화로 다음 사이클 새로 시작
         lastUpdownPrice = null;
         cycles.push({
           cycleNum: currentCycleNum,
@@ -202,7 +222,8 @@ export function runBacktest(prices, investmentUSD, startFrom = null, maxPorang =
       }
     }
 
-    // ── 포트폴리오 평가액 계산 ──────────────────────
+    // ── 평가액 계산 ───────────────────────────────────────────────────
+    // 현금 + 업다운 보유 평가액 + 랭크 보유 평가액 (모두 오늘 종가 기준)
     const updownValue = totalShares * today.close;
     const tteobValue = rankBundles.reduce((sum, b) => sum + b.shares * today.close, 0);
     const totalValue = cash + updownValue + tteobValue;
@@ -229,9 +250,10 @@ export function runBacktest(prices, investmentUSD, startFrom = null, maxPorang =
       updownSell,
       tteobBuy,
       tteobSellCount: tteobSells.length,
+      // avgCost: 보유 주식이 없으면 null (테이블에서 '-' 표시)
       avgCost: totalShares > 0 ? parseFloat((totalUpdownCost / totalShares).toFixed(4)) : null,
       cycleNum: currentCycleNum,
-      cycleEndPnlPct,
+      cycleEndPnlPct, // 사이클 종료일에만 값, 나머지는 null
       cycleEndNum,
     });
   }
@@ -239,6 +261,7 @@ export function runBacktest(prices, investmentUSD, startFrom = null, maxPorang =
   const finalValue = dailyLog[dailyLog.length - 1]?.totalValue ?? investmentUSD;
   const totalReturn = ((finalValue - investmentUSD) / investmentUSD) * 100;
   const maxDrawdown = calcMaxDrawdown(dailyLog.map(d => d.totalValue));
+  // currentCycleReturn: 아직 종료되지 않은 현재 진행 중인 사이클의 수익률
   const currentCycleReturn = parseFloat(((finalValue - cycleStartCash) / cycleStartCash * 100).toFixed(2));
 
   return {

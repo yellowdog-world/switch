@@ -23,7 +23,10 @@ export default function App() {
     setResult(null);
 
     try {
-      // 첫날 어제종가 확보를 위해 7일 앞당겨 데이터 요청
+      // 엔진의 LP 계산은 "어제 종가"가 필요한데, from 첫날엔 어제 데이터가 없음.
+      // 7일 앞당겨 데이터를 요청해서 lookback 구간을 확보.
+      // 주말/공휴일 연속으로 있어도 5일이면 충분하지만 여유있게 7일.
+      // 실제 시뮬레이션은 from 날짜부터만 돌아가도록 runBacktest에 startFrom을 전달.
       const lookbackFrom = new Date(from);
       lookbackFrom.setDate(lookbackFrom.getDate() - 7);
       const lookbackFromStr = lookbackFrom.toISOString().split('T')[0];
@@ -32,7 +35,6 @@ export default function App() {
       if (data.prices.length < 2)
         throw new Error("해당 기간 데이터가 부족합니다.");
 
-      // from을 넘겨 lookback 데이터는 어제종가 확보용으로만 쓰고 시뮬레이션은 from부터 시작
       const backtestResult = runBacktest(data.prices, investment, from, porang);
 
       setResult(backtestResult);
