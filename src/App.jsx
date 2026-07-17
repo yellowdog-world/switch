@@ -9,7 +9,8 @@ import { fetchPrices } from "./utils/stockCache";
 export default function App() {
   const [mode, setMode] = useState(() => {
     const p = new URLSearchParams(window.location.search);
-    return p.get("mode") === "backtest" ? "backtest" : "scan";
+    if (p.get("mode") === "backtest" || p.get("symbol")) return "backtest";
+    return "scan";
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
