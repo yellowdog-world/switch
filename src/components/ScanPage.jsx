@@ -71,7 +71,7 @@ export default function ScanPage() {
   const [to, setTo] = useState(init.to);
   const [categories, setCategories] = useState(init.categories);
   const [investment, setInvestment] = useState(String(init.investment));
-  const [porang, setPorang] = useState(init.porang);
+  const [porang, setPorang] = useState(String(init.porang));
   const [scanning, setScanning] = useState(false);
   const [copied, setCopied] = useState(false);
   const [progress, setProgress] = useState({ done: 0, total: 0 });
@@ -101,7 +101,7 @@ export default function ScanPage() {
       if (abortRef.current) break;
       const batch = tickers.slice(i, i + BATCH);
       const settled = await Promise.allSettled(
-        batch.map(sym => scanOne(sym, from, to, Number(investment) || 0, porang))
+        batch.map(sym => scanOne(sym, from, to, Number(investment) || 0, Math.max(1, Math.min(30, Number(porang) || 15))))
       );
       for (const r of settled) {
         if (r.status === "fulfilled" && r.value) {
@@ -206,11 +206,11 @@ export default function ScanPage() {
             )}
             <span className="investment-divider">÷</span>
             <input className="input porang-input" type="number" value={porang}
-              onChange={e => setPorang(Math.max(1, Math.min(30, Number(e.target.value))))}
+              onChange={e => setPorang(e.target.value)}
               min={1} max={30} disabled={scanning} />
             <span className="investment-unit">분할</span>
           </div>
-          <span className="hint">{scanPrefix}{investment ? Math.floor(Number(investment) / porang).toLocaleString() : "-"}</span>
+          <span className="hint">{scanPrefix}{investment && porang ? Math.floor(Number(investment) / Number(porang)).toLocaleString() : "-"}</span>
         </div>
 
         <div className="scan-actions">

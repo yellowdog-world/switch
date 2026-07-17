@@ -88,7 +88,7 @@ export default function Controls({ onRun, loading }) {
   const [to, setTo] = useState(initial.to);
   const [activePeriod, setActivePeriod] = useState("");
   const [investment, setInvestment] = useState(String(initial.investment));
-  const [porang, setPorang] = useState(initial.porang ?? 15);
+  const [porang, setPorang] = useState(String(initial.porang ?? 15));
   const [copied, setCopied] = useState(false);
 
   // URL 파라미터로 열린 경우 자동 실행 (최초 1회)
@@ -138,8 +138,9 @@ export default function Controls({ onRun, loading }) {
 
   function handleSubmit(e) {
     e.preventDefault();
-    if (!symbol || !from || !to || !investment) return;
-    onRun({ symbol: symbol.toUpperCase(), from, to, investment: Number(investment), porang: Number(porang) });
+    if (!symbol || !from || !to || !investment || !porang) return;
+    const p = Math.max(1, Math.min(30, Number(porang)));
+    onRun({ symbol: symbol.toUpperCase(), from, to, investment: Number(investment), porang: p });
   }
 
   return (
@@ -231,7 +232,7 @@ export default function Controls({ onRun, loading }) {
               className="input porang-input"
               type="number"
               value={porang}
-              onChange={e => update("porang", Math.max(1, Math.min(30, Number(e.target.value))))}
+              onChange={e => update("porang", e.target.value)}
               min={1}
               max={30}
               required
@@ -239,7 +240,7 @@ export default function Controls({ onRun, loading }) {
             />
             <span className="investment-unit">분할</span>
           </div>
-          <div className="hint">1회 매수금액: {isKoreanSymbol(symbol) ? "₩" : "$"}{investment ? Math.floor(Number(investment) / porang).toLocaleString() : "-"}</div>
+          <div className="hint">1회 매수금액: {isKoreanSymbol(symbol) ? "₩" : "$"}{investment && porang ? Math.floor(Number(investment) / Number(porang)).toLocaleString() : "-"}</div>
         </div>
 
         <div className="controls-actions">
