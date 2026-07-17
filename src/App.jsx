@@ -16,6 +16,7 @@ export default function App() {
   const [error, setError] = useState(null);
   const [result, setResult] = useState(null);
   const [params, setParams] = useState(null);
+  const [rawPrices, setRawPrices] = useState(null); // 롤링 분석용 원본 가격 데이터
 
   async function handleRun({ symbol, from, to, investment, porang = 15 }) {
     setLoading(true);
@@ -35,6 +36,7 @@ export default function App() {
       if (data.prices.length < 2)
         throw new Error("해당 기간 데이터가 부족합니다.");
 
+      setRawPrices(data.prices); // 롤링 분석에서 재활용
       const backtestResult = runBacktest(data.prices, investment, from, porang);
 
       setResult(backtestResult);
@@ -89,7 +91,7 @@ export default function App() {
             {result && params && (
               <>
                 <Summary summary={result.summary} params={params} />
-                <Charts dailyLog={result.dailyLog} cycles={result.cycles} symbol={params.symbol} symbolName={params.symbolName} maxPorang={params.porang} />
+                <Charts dailyLog={result.dailyLog} cycles={result.cycles} symbol={params.symbol} symbolName={params.symbolName} maxPorang={params.porang} prices={rawPrices} investment={params.investment} />
               </>
             )}
           </>

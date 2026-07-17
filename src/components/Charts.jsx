@@ -6,10 +6,11 @@ import {
 import { useState } from "react";
 import { fetchPrices } from "../utils/stockCache";
 import DailyTable from "./DailyTable";
+import RollingChart from "./RollingChart";
 
 const COMPARE_COLORS = ["#a78bfa", "#fb923c", "#38bdf8", "#f472b6", "#4ade80"];
 
-export default function Charts({ dailyLog, cycles, symbol, symbolName, maxPorang }) {
+export default function Charts({ dailyLog, cycles, symbol, symbolName, maxPorang, prices, investment }) {
   const [tab, setTab] = useState("daily");
 
   // 날짜 샘플링 (너무 많으면 느림)
@@ -20,6 +21,7 @@ export default function Charts({ dailyLog, cycles, symbol, symbolName, maxPorang
     { key: "porang", label: "포랭/LP 변화" },
     { key: "cycle", label: "사이클별 손익" },
     { key: "daily", label: "일별 현황" },
+    { key: "rolling", label: "롤링 분석" },
   ];
 
   return (
@@ -41,6 +43,7 @@ export default function Charts({ dailyLog, cycles, symbol, symbolName, maxPorang
         {tab === "porang" && <PorangChart data={sampled} />}
         {tab === "cycle" && <CycleChart cycles={cycles} />}
         {tab === "daily" && <DailyTable dailyLog={dailyLog} maxPorang={maxPorang} />}
+        {tab === "rolling" && <RollingChart prices={prices} investment={investment} maxPorang={maxPorang} />}
       </div>
     </section>
   );
