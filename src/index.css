@@ -50,11 +50,10 @@ body {
   display: flex; align-items: center; justify-content: center;
   width: 40px; height: 40px;
 }
-/* 로고 텍스트: 모바일 스크롤 시 페이드 아웃 (width는 유지해 nav 이동 방지) */
+/* 로고 텍스트 */
 .logo-text {
   white-space: nowrap;
-  opacity: 1;
-  transition: opacity 0.22s ease;
+  overflow: hidden;
 }
 .logo-title {
   font-family: var(--font-display);
@@ -509,13 +508,21 @@ body {
 
   /* Header */
   .header-inner { padding: 8px 12px; }
-  .logo-icon { width: 34px; height: 34px; }
+  .header-top { gap: 8px; justify-content: flex-start; }
+  .logo-icon { flex-shrink: 0; width: 34px; height: 34px; }
   .logo-icon svg { width: 34px; height: 34px; }
-  .logo-title { font-size: 12px; }
+  .logo-text {
+    max-width: 80px; /* "황구" 길이에 맞게 여유있게 */
+    transition: max-width 0.25s ease, opacity 0.2s ease;
+    opacity: 1;
+  }
+  .logo-title { font-size: 13px; }
   .logo-sub { display: none; }
-  .nav-btn { padding: 6px 10px; font-size: 11px; }
-  /* 스크롤하면 로고 텍스트 페이드아웃 (width 유지 → nav 위치 고정) */
-  .header-scrolled .logo-text { opacity: 0; pointer-events: none; }
+  /* 스크롤하면 로고 텍스트 접고 nav가 공간 채움 */
+  .header-scrolled .logo-text { max-width: 0; opacity: 0; }
+  /* nav: 남은 공간 채우기 */
+  .main-nav { flex: 1; }
+  .nav-btn { flex: 1; padding: 6px 4px; font-size: 11px; text-align: center; }
 
   /* Main */
   .main { padding: 14px 12px 60px; gap: 16px; }
@@ -582,7 +589,7 @@ body {
   color: var(--muted);
   margin-bottom: 8px;
 }
-.rolling-page { max-width: 1100px; margin: 0 auto; padding: 24px; }
+.rolling-page { width: 100%; } /* 패딩은 .main에서만 적용 */
 .rolling-page-empty {
   display: flex;
   justify-content: center;

@@ -98,7 +98,7 @@ export default function App() {
             <div className="logo">
               <div className="logo-icon"><DogLogo /></div>
               <div className="logo-text">
-                <div className="logo-title">YELLOWDOG METHOD</div>
+                <div className="logo-title">황구</div>
                 <div className="logo-sub">Backtest Engine</div>
               </div>
             </div>
