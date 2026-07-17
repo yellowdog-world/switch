@@ -14,7 +14,9 @@ export default async function handler(req, res) {
   }
 
   const period1 = Math.floor(new Date(from).getTime() / 1000);
-  const period2 = Math.floor(new Date(to).getTime() / 1000);
+  const toDate = new Date(to);
+  toDate.setDate(toDate.getDate() + 1);
+  const period2 = Math.floor(toDate.getTime() / 1000);
 
   const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?period1=${period1}&period2=${period2}&interval=1d&events=history`;
 
