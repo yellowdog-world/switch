@@ -189,13 +189,9 @@ export default function RollingChart({ prices, investment, maxPorang, from, to }
               tickFormatter={v => `${v}%`}
             />
             <Tooltip
-              contentStyle={{
-                background: "#1a1a2e",
-                border: "1px solid rgba(255,255,255,0.12)",
-                borderRadius: 8,
-                fontSize: 12,
-                color: "#e8e8f0",
-              }}
+              contentStyle={{ background: "#1a1a2e", border: "1px solid #333", borderRadius: 8, color: "#e0e0e0" }}
+              labelStyle={{ color: "#aaa" }}
+              itemStyle={{ color: "#e0e0e0" }}
               formatter={(v) => [`${v >= 0 ? "+" : ""}${v.toFixed(2)}%`, "수익률"]}
               labelFormatter={(l) => `시작: 20${l}`}
             />
