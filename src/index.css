@@ -629,6 +629,35 @@ body {
   color: var(--muted);
   line-height: 1.6;
 }
+/* 롤링 분석 자체 설정 폼 */
+.rolling-form {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-bottom: 24px;
+}
+.rolling-form-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 16px;
+}
+.rolling-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.rolling-form-label {
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 0.02em;
+}
+@media (max-width: 700px) {
+  .rolling-form-row { flex-direction: column; align-items: stretch; }
+  .rolling-form-field { width: 100%; }
+  .rolling-form-field .input { width: 100% !important; }
+}
 
 /* ── Column Tooltip ── */
 .th-tip-label {

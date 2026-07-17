@@ -1,39 +1,126 @@
+import { useState } from "react";
+import { fetchPrices } from "../utils/stockCache";
 import RollingChart from "./RollingChart";
 
-export default function RollingPage({ prices, params, onGoBacktest }) {
-  // 백테스트를 아직 실행하지 않은 경우
-  if (!prices || !params) {
-    return (
-      <section className="rolling-page-empty">
-        <div className="rolling-page-empty-inner">
-          <div className="rolling-page-empty-title">백테스트를 먼저 실행해주세요</div>
-          <div className="rolling-page-empty-desc">
-            롤링 분석은 백테스트 설정(종목·기간·투자금·분할)을 그대로 사용합니다.
-            백테스트 탭에서 먼저 실행한 뒤 돌아오세요.
-          </div>
-          <button className="run-btn" onClick={onGoBacktest}>백테스트 탭으로 이동</button>
-        </div>
-      </section>
-    );
-  }
+const DEFAULT_USD = 15000;
+const DEFAULT_KRW = 15000000;
+const isKoreanSymbol = (sym) => sym?.endsWith(".KS");
 
-  const prefix = params.symbol.endsWith(".KS") ? "₩" : "$";
+const toKSTDateStr = (d) => new Date(d.getTime() + 9 * 60 * 60 * 1000).toISOString().split("T")[0];
+
+const getDefaultFrom = () => {
+  const d = new Date();
+  d.setFullYear(d.getFullYear() - 3);
+  return toKSTDateStr(d);
+};
+const getDefaultTo = () => toKSTDateStr(new Date());
+
+export default function RollingPage({ prices: backtestPrices, params: backtestParams }) {
+  // 백테스트 실행 이력이 있으면 그 설정을 초기값으로 사용, 없으면 기본값
+  const [symbol, setSymbol] = useState(backtestParams?.symbol || "SOXL");
+  const [from, setFrom] = useState(backtestParams?.from || getDefaultFrom());
+  const [to, setTo] = useState(backtestParams?.to || getDefaultTo());
+  const [investment, setInvestment] = useState(String(backtestParams?.investment || DEFAULT_USD));
+  const [porang, setPorang] = useState(String(backtestParams?.porang || 15));
+
+  const [prices, setPrices] = useState(backtestPrices || null);
+  const [ranParams, setRanParams] = useState(backtestParams || null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const prefix = isKoreanSymbol(symbol) ? "₩" : "$";
+
+  async function handleRun() {
+    if (!symbol || !from || !to) return;
+    setLoading(true);
+    setError(null);
+    try {
+      // 첫날 LP 계산을 위한 7일 lookback
+      const lb = new Date(from);
+      lb.setDate(lb.getDate() - 7);
+      const data = await fetchPrices(symbol.toUpperCase(), lb.toISOString().split("T")[0], to);
+      if (data.prices.length < 5) throw new Error("해당 기간 데이터가 부족합니다.");
+      setPrices(data.prices);
+      setRanParams({
+        symbol: symbol.toUpperCase(),
+        from,
+        to,
+        investment: Number(investment) || DEFAULT_USD,
+        porang: Math.max(1, Math.min(30, Number(porang) || 15)),
+      });
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <section className="rolling-page">
       <div className="section-title">
         롤링 분석
-        <span className="section-sub">
-          {params.symbol} · {params.from} ~ {params.to} · {prefix}{params.investment.toLocaleString()} · {params.porang}분할
-        </span>
+        <span className="section-sub">종료일 고정 · 시작일을 밀어가며 진입 시점 민감도 분석</span>
       </div>
-      <RollingChart
-        prices={prices}
-        investment={params.investment}
-        maxPorang={params.porang}
-        from={params.from}
-        to={params.to}
-      />
+
+      {/* 설정 폼 */}
+      <div className="rolling-form">
+        <div className="rolling-form-row">
+          <div className="rolling-form-field">
+            <label className="rolling-form-label">종목</label>
+            <input className="input" value={symbol}
+              onChange={e => setSymbol(e.target.value.toUpperCase())}
+              placeholder="예: SOXL" style={{ width: 110 }} />
+          </div>
+          <div className="rolling-form-field">
+            <label className="rolling-form-label">시작일</label>
+            <input className="input input-compact" type="date" value={from}
+              onChange={e => setFrom(e.target.value)} />
+          </div>
+          <div className="rolling-form-field">
+            <label className="rolling-form-label">종료일</label>
+            <input className="input input-compact" type="date" value={to}
+              onChange={e => setTo(e.target.value)} />
+          </div>
+          <div className="rolling-form-field">
+            <label className="rolling-form-label">투자금 ({isKoreanSymbol(symbol) ? "KRW" : "USD"})</label>
+            <div className="input-prefix-wrap">
+              <span className="input-prefix">{prefix}</span>
+              <input className="input input-prefixed" type="number" value={investment}
+                onChange={e => setInvestment(e.target.value)}
+                style={{ width: 120 }} />
+            </div>
+          </div>
+          <div className="rolling-form-field">
+            <label className="rolling-form-label">분할</label>
+            <input className="input porang-input" type="number" value={porang}
+              onChange={e => setPorang(e.target.value)} min={1} max={30} />
+          </div>
+          <button className="run-btn" onClick={handleRun} disabled={loading}>
+            {loading ? "로딩 중..." : "▶ 분석 실행"}
+          </button>
+        </div>
+        {error && (
+          <div className="error-box"><span className="error-icon">⚠</span> {error}</div>
+        )}
+      </div>
+
+      {/* 결과 */}
+      {prices && ranParams && (
+        <RollingChart
+          prices={prices}
+          investment={ranParams.investment}
+          maxPorang={ranParams.porang}
+          from={ranParams.from}
+          to={ranParams.to}
+        />
+      )}
+
+      {!prices && (
+        <div className="rolling-empty" style={{ marginTop: 40 }}>
+          설정을 입력하고 분석을 실행하세요.
+          {backtestParams && " (백테스트 설정이 자동으로 불러와졌습니다)"}
+        </div>
+      )}
     </section>
   );
 }
