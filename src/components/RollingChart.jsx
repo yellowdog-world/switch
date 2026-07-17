@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { runBacktest } from "../engine/switchEngine";
 import {
-  BarChart, Bar, AreaChart, Area,
+  ComposedChart, BarChart, Bar, AreaChart, Area, Line,
   XAxis, YAxis, CartesianGrid, Tooltip,
   ReferenceLine, ResponsiveContainer, Cell,
 } from "recharts";
@@ -212,7 +212,7 @@ function heatColor(v, maxAbs) {
     : `rgba(248,113,113,${alpha.toFixed(2)})`;
 }
 
-function HeatmapSection({ results }) {
+function HeatmapSection({ results, prices }) {
   // YYYY-MM별 수익률 집계
   const monthMap = {};
   for (const r of results) {
@@ -221,6 +221,20 @@ function HeatmapSection({ results }) {
     monthMap[key].total += r.totalReturn;
     monthMap[key].count += 1;
   }
+
+  // YYYY-MM별 평균 주가 (실제 거래일 기준)
+  const monthPriceMap = {};
+  for (const p of (prices || [])) {
+    const key = p.date.slice(0, 7);
+    if (!monthPriceMap[key]) monthPriceMap[key] = { total: 0, count: 0 };
+    monthPriceMap[key].total += p.close;
+    monthPriceMap[key].count += 1;
+  }
+  const avgPriceOf = key => {
+    const mp = monthPriceMap[key];
+    return mp ? mp.total / mp.count : null;
+  };
+  const fmtPrice = v => v == null ? "" : v >= 1000 ? Math.round(v).toLocaleString() : v.toFixed(2);
   const months = Object.entries(monthMap).map(([k, v]) => ({
     key: k, year: +k.slice(0, 4), month: +k.slice(5, 7), avg: v.total / v.count, count: v.count,
   }));
@@ -284,10 +298,12 @@ function HeatmapSection({ results }) {
                 const d = monthMap[key];
                 if (!d) return <div key={mi} className="heatmap-cell heatmap-empty">—</div>;
                 const avg = d.total / d.count;
+                const key2 = `${year}-${String(mi + 1).padStart(2, "0")}`;
+                const ap = avgPriceOf(key2);
                 return (
                   <div key={mi} className="heatmap-cell heatmap-value"
                     style={{ background: heatColor(avg, maxAbs) }}
-                    title={`${year}년 ${MONTH_LABELS[mi]}: ${avg >= 0 ? "+" : ""}${avg.toFixed(2)}% (${d.count}회 평균)`}>
+                    title={`${year}년 ${MONTH_LABELS[mi]}: ${avg >= 0 ? "+" : ""}${avg.toFixed(2)}% (${d.count}회 평균)${ap ? ` / 평균가 ${fmtPrice(ap)}` : ""}`}>
                     {avg >= 0 ? "+" : ""}{avg.toFixed(1)}
                   </div>
                 );
@@ -324,6 +340,18 @@ export default function RollingChart({ prices, investment, maxPorang, from, to }
   const results = useMemo(() => {
     if (!prices || prices.length < 10 || !from || !to) return [];
 
+    // 시작일에 가장 가까운 거래일 주가 조회 (이진탐색)
+    const sortedPrices = [...prices].sort((a, b) => a.date.localeCompare(b.date));
+    function priceAt(targetDate) {
+      let lo = 0, hi = sortedPrices.length - 1, found = null;
+      while (lo <= hi) {
+        const mid = (lo + hi) >> 1;
+        if (sortedPrices[mid].date <= targetDate) { found = sortedPrices[mid].close; lo = mid + 1; }
+        else hi = mid - 1;
+      }
+      return found;
+    }
+
     const dates = prices.map(p => p.date);
     const out = [];
     let curObj = new Date(from);
@@ -342,8 +370,9 @@ export default function RollingChart({ prices, investment, maxPorang, from, to }
         startDate: curStr,
         label: curStr.slice(2, 10), // YY-MM-DD
         totalReturn: ret,
-        positiveReturn: Math.max(0, ret), // 양수 영역만 (0 이하는 0)
-        negativeReturn: Math.min(0, ret), // 음수 영역만 (0 이상은 0)
+        positiveReturn: Math.max(0, ret),
+        negativeReturn: Math.min(0, ret),
+        priceAtStart: priceAt(curStr), // 진입 시점 주가 (보조축)
         maxDrawdown: result.summary.maxDrawdown,
         totalCycles: result.summary.totalCycles,
         dongCount: result.summary.dongCount,
@@ -433,13 +462,13 @@ export default function RollingChart({ prices, investment, maxPorang, from, to }
           highlight="negative" />
       </div>
 
-      {/* 막대 차트 */}
+      {/* 막대 차트 + 주가 오버레이 */}
       <div className="rolling-chart-wrap">
         <div className="rolling-chart-title">
-          시작 시점별 수익률 (종료일 {to} 기준) — 초록: 수익, 빨강: 손실
+          시작 시점별 수익률 (종료일 {to} 기준) — 초록: 수익, 빨강: 손실 | 파란선: 진입 시점 주가
         </div>
         <ResponsiveContainer width="100%" height={280}>
-          <BarChart data={results} margin={{ top: 8, right: 16, left: 0, bottom: 48 }}>
+          <ComposedChart data={results} margin={{ top: 8, right: 48, left: 0, bottom: 48 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
             <XAxis
               dataKey="label"
@@ -449,31 +478,45 @@ export default function RollingChart({ prices, investment, maxPorang, from, to }
               interval="preserveStartEnd"
             />
             <YAxis
+              yAxisId="ret"
               tick={{ fontSize: 10, fill: "#666" }}
               tickFormatter={v => `${v}%`}
+            />
+            <YAxis
+              yAxisId="price"
+              orientation="right"
+              tick={{ fontSize: 9, fill: "#60a5fa" }}
+              tickFormatter={v => v >= 1000 ? Math.round(v).toLocaleString() : v.toFixed(0)}
+              width={44}
             />
             <Tooltip
               contentStyle={{ background: "#1a1a2e", border: "1px solid #333", borderRadius: 8, color: "#e0e0e0" }}
               labelStyle={{ color: "#aaa" }}
               itemStyle={{ color: "#e0e0e0" }}
-              formatter={(v) => [`${v >= 0 ? "+" : ""}${v.toFixed(2)}%`, "수익률"]}
+              formatter={(v, name) => {
+                if (name === "주가") return [v >= 1000 ? Math.round(v).toLocaleString() : v.toFixed(2), "주가"];
+                return [`${v >= 0 ? "+" : ""}${v.toFixed(2)}%`, "수익률"];
+              }}
               labelFormatter={(l) => `시작: 20${l}`}
             />
-            <ReferenceLine y={0} stroke="rgba(255,255,255,0.25)" />
-            <Bar dataKey="totalReturn" radius={[2, 2, 0, 0]} maxBarSize={32}>
+            <ReferenceLine yAxisId="ret" y={0} stroke="rgba(255,255,255,0.25)" />
+            <Bar yAxisId="ret" dataKey="totalReturn" radius={[2, 2, 0, 0]} maxBarSize={32}>
               {results.map((r, i) => (
                 <Cell key={i} fill={r.totalReturn >= 0 ? "#34d399" : "#f87171"} />
               ))}
             </Bar>
-          </BarChart>
+            <Line yAxisId="price" type="monotone" dataKey="priceAtStart"
+              stroke="#60a5fa" strokeWidth={1.5} dot={false} name="주가"
+              strokeDasharray="4 2" activeDot={{ r: 3, fill: "#60a5fa" }} />
+          </ComposedChart>
         </ResponsiveContainer>
       </div>
 
-      {/* 추세 라인 차트 */}
+      {/* 추세 라인 차트 + 주가 오버레이 */}
       <div className="rolling-chart-wrap" style={{ marginTop: 24 }}>
-        <div className="rolling-chart-title">수익률 추세선 — 시작 시점에 따른 흐름</div>
-        <ResponsiveContainer width="100%" height={200}>
-          <AreaChart data={results} margin={{ top: 8, right: 16, left: 0, bottom: 48 }}>
+        <div className="rolling-chart-title">수익률 추세선 — 시작 시점에 따른 흐름 | 파란선: 진입 시점 주가</div>
+        <ResponsiveContainer width="100%" height={220}>
+          <ComposedChart data={results} margin={{ top: 8, right: 48, left: 0, bottom: 48 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
             <XAxis
               dataKey="label"
@@ -483,27 +526,43 @@ export default function RollingChart({ prices, investment, maxPorang, from, to }
               interval="preserveStartEnd"
             />
             <YAxis
+              yAxisId="ret"
               tick={{ fontSize: 10, fill: "#666" }}
               tickFormatter={v => `${v}%`}
+            />
+            <YAxis
+              yAxisId="price"
+              orientation="right"
+              tick={{ fontSize: 9, fill: "#60a5fa" }}
+              tickFormatter={v => v >= 1000 ? Math.round(v).toLocaleString() : v.toFixed(0)}
+              width={44}
             />
             <Tooltip
               contentStyle={{ background: "#1a1a2e", border: "1px solid #333", borderRadius: 8, color: "#e0e0e0" }}
               labelStyle={{ color: "#aaa" }}
               itemStyle={{ color: "#e0e0e0" }}
-              formatter={(v, name) => name === "totalReturn" ? [`${v >= 0 ? "+" : ""}${v.toFixed(2)}%`, "수익률"] : null}
+              formatter={(v, name) => {
+                if (name === "주가") return [v >= 1000 ? Math.round(v).toLocaleString() : v.toFixed(2), "주가"];
+                if (name === "totalReturn") return [`${v >= 0 ? "+" : ""}${v.toFixed(2)}%`, "수익률"];
+                return null; // positiveReturn, negativeReturn 숨김
+              }}
               labelFormatter={(l) => `시작: 20${l}`}
             />
-            <ReferenceLine y={0} stroke="rgba(255,255,255,0.3)" strokeDasharray="4 3" />
+            <ReferenceLine yAxisId="ret" y={0} stroke="rgba(255,255,255,0.3)" strokeDasharray="4 3" />
             {/* 양수 영역: 초록 채움 */}
-            <Area type="monotone" dataKey="positiveReturn" stroke="none"
+            <Area yAxisId="ret" type="monotone" dataKey="positiveReturn" stroke="none"
               fill="#34d399" fillOpacity={0.25} baseValue={0} legendType="none" />
             {/* 음수 영역: 빨강 채움 */}
-            <Area type="monotone" dataKey="negativeReturn" stroke="none"
+            <Area yAxisId="ret" type="monotone" dataKey="negativeReturn" stroke="none"
               fill="#f87171" fillOpacity={0.25} baseValue={0} legendType="none" />
             {/* 수익률 라인 */}
-            <Area type="monotone" dataKey="totalReturn" stroke="#00d4aa"
-              strokeWidth={2} fill="none" dot={false} activeDot={{ r: 4, fill: "#00d4aa" }} />
-          </AreaChart>
+            <Area yAxisId="ret" type="monotone" dataKey="totalReturn" stroke="#00d4aa"
+              strokeWidth={2} fill="none" dot={false} name="totalReturn" activeDot={{ r: 4, fill: "#00d4aa" }} />
+            {/* 주가 라인 */}
+            <Line yAxisId="price" type="monotone" dataKey="priceAtStart"
+              stroke="#60a5fa" strokeWidth={1.5} dot={false} name="주가"
+              strokeDasharray="4 2" activeDot={{ r: 3, fill: "#60a5fa" }} />
+          </ComposedChart>
         </ResponsiveContainer>
       </div>
 
@@ -511,7 +570,7 @@ export default function RollingChart({ prices, investment, maxPorang, from, to }
       <BoxPlotSection results={results} />
 
       {/* 월별 히트맵 */}
-      <HeatmapSection results={results} />
+      <HeatmapSection results={results} prices={prices} />
     </div>
   );
 }
