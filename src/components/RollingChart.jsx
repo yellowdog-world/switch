@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
 import { runBacktest } from "../engine/switchEngine";
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
+  BarChart, Bar, AreaChart, Area,
+  XAxis, YAxis, CartesianGrid, Tooltip,
   ReferenceLine, ResponsiveContainer, Cell,
 } from "recharts";
 
@@ -202,6 +203,50 @@ export default function RollingChart({ prices, investment, maxPorang, from, to }
               ))}
             </Bar>
           </BarChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* 추세 라인 차트 */}
+      <div className="rolling-chart-wrap" style={{ marginTop: 24 }}>
+        <div className="rolling-chart-title">수익률 추세선 — 시작 시점에 따른 흐름</div>
+        <ResponsiveContainer width="100%" height={200}>
+          <AreaChart data={results} margin={{ top: 8, right: 16, left: 0, bottom: 48 }}>
+            <defs>
+              <linearGradient id="rollingAreaGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#00d4aa" stopOpacity={0.25} />
+                <stop offset="95%" stopColor="#00d4aa" stopOpacity={0.02} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+            <XAxis
+              dataKey="label"
+              tick={{ fontSize: 10, fill: "#666" }}
+              angle={-45}
+              textAnchor="end"
+              interval="preserveStartEnd"
+            />
+            <YAxis
+              tick={{ fontSize: 10, fill: "#666" }}
+              tickFormatter={v => `${v}%`}
+            />
+            <Tooltip
+              contentStyle={{ background: "#1a1a2e", border: "1px solid #333", borderRadius: 8, color: "#e0e0e0" }}
+              labelStyle={{ color: "#aaa" }}
+              itemStyle={{ color: "#e0e0e0" }}
+              formatter={(v) => [`${v >= 0 ? "+" : ""}${v.toFixed(2)}%`, "수익률"]}
+              labelFormatter={(l) => `시작: 20${l}`}
+            />
+            <ReferenceLine y={0} stroke="rgba(255,255,255,0.3)" strokeDasharray="4 3" />
+            <Area
+              type="monotone"
+              dataKey="totalReturn"
+              stroke="#00d4aa"
+              strokeWidth={2}
+              fill="url(#rollingAreaGrad)"
+              dot={false}
+              activeDot={{ r: 4, fill: "#00d4aa" }}
+            />
+          </AreaChart>
         </ResponsiveContainer>
       </div>
     </div>
