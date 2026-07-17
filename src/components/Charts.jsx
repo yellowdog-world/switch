@@ -9,7 +9,7 @@ import DailyTable from "./DailyTable";
 
 const COMPARE_COLORS = ["#a78bfa", "#fb923c", "#38bdf8", "#f472b6", "#4ade80"];
 
-export default function Charts({ dailyLog, cycles, symbol, symbolName }) {
+export default function Charts({ dailyLog, cycles, symbol, symbolName, maxPorang }) {
   const [tab, setTab] = useState("daily");
 
   // 날짜 샘플링 (너무 많으면 느림)
@@ -40,7 +40,7 @@ export default function Charts({ dailyLog, cycles, symbol, symbolName }) {
         {tab === "return" && <ReturnChart data={sampled} symbol={symbol} symbolName={symbolName || symbol} />}
         {tab === "porang" && <PorangChart data={sampled} />}
         {tab === "cycle" && <CycleChart cycles={cycles} />}
-        {tab === "daily" && <DailyTable dailyLog={dailyLog} />}
+        {tab === "daily" && <DailyTable dailyLog={dailyLog} maxPorang={maxPorang} />}
       </div>
     </section>
   );

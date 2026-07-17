@@ -51,7 +51,7 @@ function ColTip({ label, formula, desc, example }) {
   );
 }
 
-export default function DailyTable({ dailyLog }) {
+export default function DailyTable({ dailyLog, maxPorang = 15 }) {
   const [filter, setFilter] = useState("all");
 
   const filtered = dailyLog.filter(d => {
@@ -136,7 +136,7 @@ export default function DailyTable({ dailyLog }) {
                 <td>{d.date}</td>
                 <td>${d.close.toFixed(2)}</td>
                 <td>{d.lp ? `$${d.lp.toFixed(2)}` : "-"}</td>
-                <td className={d.porang > 10 ? "val-warn" : ""}>{d.porang}</td>
+                <td className={d.porang >= maxPorang * 0.7 ? "val-warn" : ""}>{d.porang}</td>
                 <td className={d.port > 0 ? "val-blue" : ""}>{d.port}</td>
                 <td className={d.rank > 0 ? "val-pink" : ""}>{d.rank}</td>
                 <td>
