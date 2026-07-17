@@ -22,6 +22,7 @@ export function runBacktest(prices, investmentUSD, startFrom = null, maxPorang =
   let lp = null;
   let lastUpdownPrice = null; // 마지막 업다운 체결가 (사이클 종료 시 null 초기화)
   let totalShares = 0; // 업다운 보유 주식 수
+  let totalUpdownCost = 0; // 업다운 보유주식 총 매입원가
   let cash = investmentUSD;
 
   // 결과 기록
@@ -72,6 +73,7 @@ export function runBacktest(prices, investmentUSD, startFrom = null, maxPorang =
           const shares = Math.floor(unitAmount / today.close);
           const spent = shares * today.close;
           totalShares += shares;
+          totalUpdownCost += spent;
           cash -= spent;
           lastUpdownPrice = today.close;
           lp = today.close;
@@ -88,6 +90,7 @@ export function runBacktest(prices, investmentUSD, startFrom = null, maxPorang =
             const shares = Math.floor(unitAmount / today.close);
             const spent = shares * today.close;
             totalShares += shares;
+            totalUpdownCost += spent;
             cash -= spent;
             lastUpdownPrice = today.close;
             lp = today.close;
@@ -110,6 +113,7 @@ export function runBacktest(prices, investmentUSD, startFrom = null, maxPorang =
     if (!updownBuy && !virtualBuy && port > 0 && lp !== null && today.close >= lp) {
       const sellShares = Math.floor(totalShares / port);
       const sellAmount = sellShares * today.close;
+      totalUpdownCost -= (totalShares > 0 ? (totalUpdownCost / totalShares) * sellShares : 0);
       totalShares -= sellShares;
       cash += sellAmount;
       lastUpdownPrice = today.close;
@@ -164,7 +168,7 @@ export function runBacktest(prices, investmentUSD, startFrom = null, maxPorang =
         dongCount += 1;
         const dongBundles = [...rankBundles];
         port = dongBundles.length;
-        for (const b of dongBundles) totalShares += b.shares;
+        for (const b of dongBundles) { totalShares += b.shares; totalUpdownCost += b.amount; }
         rankBundles = [];
         action.push(`⚠️ 똥 이월! ${dongBundles.length}묶음 → 포트=${port}`);
 
@@ -225,6 +229,7 @@ export function runBacktest(prices, investmentUSD, startFrom = null, maxPorang =
       updownSell,
       tteobBuy,
       tteobSellCount: tteobSells.length,
+      avgCost: totalShares > 0 ? parseFloat((totalUpdownCost / totalShares).toFixed(4)) : null,
       cycleNum: currentCycleNum,
       cycleEndPnlPct,
       cycleEndNum,

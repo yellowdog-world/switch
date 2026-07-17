@@ -57,6 +57,7 @@ export default function DailyTable({ dailyLog }) {
               <th>포랭</th>
               <th>포트</th>
               <th>랭크</th>
+              <th>평단/차이</th>
               <th>평가액</th>
               <th>수익률</th>
               <th>사이클</th>
@@ -72,6 +73,17 @@ export default function DailyTable({ dailyLog }) {
                 <td className={d.porang > 10 ? "val-warn" : ""}>{d.porang}</td>
                 <td className={d.port > 0 ? "val-blue" : ""}>{d.port}</td>
                 <td className={d.rank > 0 ? "val-pink" : ""}>{d.rank}</td>
+                <td>
+                  {d.avgCost != null ? (
+                    <span>
+                      {d.avgCost.toFixed(2)}
+                      <br />
+                      <span className={((d.close - d.avgCost) / d.avgCost * 100) >= 0 ? "val-green" : "val-red"}>
+                        {((d.close - d.avgCost) / d.avgCost * 100) >= 0 ? "+" : ""}{((d.close - d.avgCost) / d.avgCost * 100).toFixed(1)}%
+                      </span>
+                    </span>
+                  ) : "-"}
+                </td>
                 <td>${d.totalValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
                 <td className={d.returnPct >= 0 ? "val-green" : "val-red"}>
                   {d.returnPct >= 0 ? "+" : ""}{d.returnPct.toFixed(2)}%
