@@ -548,3 +548,44 @@ body {
   .chart-legend-bar { flex-wrap: wrap; gap: 6px; }
   .compare-input-wrap { flex-wrap: wrap; }
 }
+
+/* ── Column Tooltip ── */
+.th-tip-label {
+  border-bottom: 1px dashed var(--muted);
+}
+.col-tip-box {
+  position: fixed;
+  z-index: 9999;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 10px 12px;
+  min-width: 230px;
+  max-width: 320px;
+  font-size: 11px;
+  line-height: 1.6;
+  pointer-events: none;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.5);
+}
+.col-tip-code {
+  display: block;
+  background: rgba(0,0,0,0.3);
+  border-radius: 4px;
+  padding: 5px 8px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  white-space: pre;
+  margin-bottom: 7px;
+  color: var(--accent);
+}
+.col-tip-desc {
+  color: var(--text);
+  margin-bottom: 4px;
+}
+.col-tip-example {
+  color: var(--muted);
+  font-size: 10px;
+  margin-top: 5px;
+  border-top: 1px solid var(--border);
+  padding-top: 5px;
+}
