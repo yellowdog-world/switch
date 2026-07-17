@@ -18,33 +18,67 @@ const STEP_OPTIONS = [
 
 const MIN_TRADING_DAYS = 5; // 시작일이 종료일에 너무 가까우면 제외
 
+// 승률 기준으로 전략의 진입 시점 민감도를 문장으로 표현
+function getInsight(winRate, avgReturn, results) {
+  const positiveCount = results.filter(r => r.totalReturn > 0).length;
+  const total = results.length;
+
+  // 연속 손실 구간이 있는지 체크 (3회 이상 연속 마이너스)
+  let maxLossStreak = 0, streak = 0;
+  for (const r of results) {
+    if (r.totalReturn < 0) { streak++; maxLossStreak = Math.max(maxLossStreak, streak); }
+    else streak = 0;
+  }
+
+  if (winRate >= 80) {
+    return {
+      verdict: "진입 시점에 둔감한 전략",
+      color: "var(--green)",
+      detail: `${total}번 중 ${positiveCount}번(${winRate.toFixed(0)}%)에서 수익. 언제 시작해도 대체로 결과가 좋습니다. 전략 자체의 우위가 있다는 신호입니다.`,
+    };
+  } else if (winRate >= 60) {
+    return {
+      verdict: "대체로 양호, 일부 구간 주의",
+      color: "var(--accent2)",
+      detail: `${total}번 중 ${positiveCount}번(${winRate.toFixed(0)}%)에서 수익. 대부분 괜찮지만 손실 구간도 있습니다. 차트에서 빨간 막대가 몰려 있는 시기를 확인하세요.`,
+    };
+  } else if (winRate >= 40) {
+    return {
+      verdict: "진입 시점에 민감한 전략",
+      color: "var(--accent2)",
+      detail: `${total}번 중 ${positiveCount}번(${winRate.toFixed(0)}%)에서 수익. 언제 시작하느냐가 결과에 큰 영향을 줍니다. 빨간 막대가 집중된 구간(하락 추세 진입)을 피하는 게 중요합니다.`,
+    };
+  } else {
+    return {
+      verdict: "대부분 구간에서 손실",
+      color: "var(--red)",
+      detail: `${total}번 중 ${positiveCount}번(${winRate.toFixed(0)}%)에서만 수익. 해당 기간 자체가 이 전략에 불리한 시장 환경이었을 가능성이 높습니다. 더 긴 기간으로 재확인해보세요.`,
+    };
+  }
+}
+
 export default function RollingChart({ prices, investment, maxPorang, from, to }) {
   const [stepDays, setStepDays] = useState(7);
 
   const results = useMemo(() => {
     if (!prices || prices.length < 10 || !from || !to) return [];
 
-    const dates = prices.map(p => p.date); // 정렬된 거래일 배열
+    const dates = prices.map(p => p.date);
     const out = [];
-
-    // 시작일 후보: from부터 step씩 증가, to보다 MIN_TRADING_DAYS 거래일 이상 남아야 함
     let curObj = new Date(from);
-    const toStr = to;
 
     while (true) {
       const curStr = curObj.toISOString().split("T")[0];
-      if (curStr >= toStr) break;
+      if (curStr >= to) break;
 
-      // curStr 이후 거래일이 MIN_TRADING_DAYS개 이상 남아 있는지 확인
-      const remaining = dates.filter(d => d >= curStr && d <= toStr);
+      const remaining = dates.filter(d => d >= curStr && d <= to);
       if (remaining.length < MIN_TRADING_DAYS) break;
 
-      // to 이하 prices만 사용 (이미 prices는 to까지 데이터를 담고 있음)
       const result = runBacktest(prices, investment, curStr, maxPorang);
 
       out.push({
         startDate: curStr,
-        label: curStr.slice(2, 10), // YY-MM-DD로 짧게
+        label: curStr.slice(2, 10), // YY-MM-DD
         totalReturn: result.summary.totalReturn,
         maxDrawdown: result.summary.maxDrawdown,
         totalCycles: result.summary.totalCycles,
@@ -59,11 +93,7 @@ export default function RollingChart({ prices, investment, maxPorang, from, to }
   }, [prices, investment, maxPorang, from, to, stepDays]);
 
   if (!prices || prices.length < 10) {
-    return (
-      <div className="rolling-empty">
-        백테스트를 먼저 실행해주세요.
-      </div>
-    );
+    return <div className="rolling-empty">백테스트를 먼저 실행해주세요.</div>;
   }
 
   const count = results.length;
@@ -75,15 +105,25 @@ export default function RollingChart({ prices, investment, maxPorang, from, to }
     );
   }
 
-  // 통계
   const avgReturn = results.reduce((s, r) => s + r.totalReturn, 0) / count;
   const minReturn = Math.min(...results.map(r => r.totalReturn));
   const maxReturn = Math.max(...results.map(r => r.totalReturn));
   const winRate = results.filter(r => r.totalReturn > 0).length / count * 100;
   const avgMDD = results.reduce((s, r) => s + r.maxDrawdown, 0) / count;
+  const insight = getInsight(winRate, avgReturn, results);
+
+  // 수익률 기준 최고/최악 시작일
+  const bestStart = results.reduce((a, b) => a.totalReturn > b.totalReturn ? a : b);
+  const worstStart = results.reduce((a, b) => a.totalReturn < b.totalReturn ? a : b);
 
   return (
     <div className="rolling-wrap">
+      {/* 안내 문구 */}
+      <div className="rolling-guide">
+        <strong>롤링 분석이란?</strong> 종료일({to})을 고정한 채 시작일을 하루씩 밀어가며 반복 테스트합니다.
+        막대 하나 = "이 날 시작했다면 지금쯤 수익률이 얼마였을까". 초록 막대가 많을수록 언제 시작해도 잘 되는 전략입니다.
+      </div>
+
       {/* 설정 */}
       <div className="rolling-controls">
         <div className="rolling-control-group">
@@ -98,7 +138,13 @@ export default function RollingChart({ prices, investment, maxPorang, from, to }
             ))}
           </div>
         </div>
-        <span className="rolling-count">{count}회 시뮬레이션 (종료일 {to} 고정)</span>
+        <span className="rolling-count">{count}회 시뮬레이션 · 종료일 {to} 고정</span>
+      </div>
+
+      {/* 판정 */}
+      <div className="rolling-verdict" style={{ borderColor: insight.color }}>
+        <span className="rolling-verdict-label" style={{ color: insight.color }}>{insight.verdict}</span>
+        <span className="rolling-verdict-detail">{insight.detail}</span>
       </div>
 
       {/* 통계 카드 */}
@@ -110,21 +156,23 @@ export default function RollingChart({ prices, investment, maxPorang, from, to }
           value={`${winRate.toFixed(0)}%`}
           sub={`${results.filter(r => r.totalReturn > 0).length}/${count}`}
           highlight={winRate >= 50 ? "positive" : "negative"} />
-        <RollCard label="최고 수익률"
+        <RollCard label="최고 시작일"
           value={`+${maxReturn.toFixed(2)}%`}
+          sub={bestStart.startDate}
           highlight="positive" />
-        <RollCard label="최저 수익률"
+        <RollCard label="최악 시작일"
           value={`${minReturn >= 0 ? "+" : ""}${minReturn.toFixed(2)}%`}
+          sub={worstStart.startDate}
           highlight={minReturn >= 0 ? "positive" : "negative"} />
         <RollCard label="평균 MDD"
           value={`-${avgMDD.toFixed(2)}%`}
           highlight="negative" />
       </div>
 
-      {/* 수익률 분포 차트 */}
+      {/* 차트 */}
       <div className="rolling-chart-wrap">
         <div className="rolling-chart-title">
-          시작 시점별 수익률 — 종료일 {to} 기준
+          시작 시점별 수익률 (종료일 {to} 기준) — 초록: 수익, 빨강: 손실
         </div>
         <ResponsiveContainer width="100%" height={280}>
           <BarChart data={results} margin={{ top: 8, right: 16, left: 0, bottom: 48 }}>
@@ -146,6 +194,7 @@ export default function RollingChart({ prices, investment, maxPorang, from, to }
                 border: "1px solid rgba(255,255,255,0.12)",
                 borderRadius: 8,
                 fontSize: 12,
+                color: "#e8e8f0",
               }}
               formatter={(v) => [`${v >= 0 ? "+" : ""}${v.toFixed(2)}%`, "수익률"]}
               labelFormatter={(l) => `시작: 20${l}`}

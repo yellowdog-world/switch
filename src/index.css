@@ -584,6 +584,35 @@ body {
   padding: 40px 0;
   text-align: center;
 }
+.rolling-guide {
+  font-size: 12px;
+  color: var(--muted);
+  background: rgba(255,255,255,0.04);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  line-height: 1.7;
+}
+.rolling-guide strong { color: var(--text); }
+.rolling-verdict {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border-left: 3px solid var(--accent);
+  padding: 8px 14px;
+  margin-bottom: 16px;
+  background: rgba(255,255,255,0.03);
+  border-radius: 0 8px 8px 0;
+}
+.rolling-verdict-label {
+  font-size: 13px;
+  font-weight: 600;
+}
+.rolling-verdict-detail {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.6;
+}
 
 /* ── Column Tooltip ── */
 .th-tip-label {
