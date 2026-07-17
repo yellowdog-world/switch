@@ -12,6 +12,7 @@ const POPULAR_KR = [
 const STORAGE_KEY = "yd_controls";
 
 const PERIODS = [
+  { key: "1m", label: "1개월" },
   { key: "3m", label: "3개월" },
   { key: "6m", label: "6개월" },
   { key: "1y", label: "1년" },
@@ -40,6 +41,7 @@ const calcPeriodDates = (key) => {
   const to = new Date();
   const toStr = toKSTDateStr(to);
   const from = new Date(to);
+  if (key === "1m") from.setMonth(from.getMonth() - 1);
   if (key === "3m") from.setMonth(from.getMonth() - 3);
   if (key === "6m") from.setMonth(from.getMonth() - 6);
   if (key === "1y") from.setFullYear(from.getFullYear() - 1);
