@@ -1,5 +1,5 @@
 export default function Summary({ summary, params }) {
-  const { totalReturn, finalValue, totalCycles, dongCount, maxDrawdown } = summary;
+  const { totalReturn, finalValue, totalCycles, dongCount, virtualBuyCount, maxDrawdown } = summary;
   const isPositive = totalReturn >= 0;
 
   return (
@@ -29,6 +29,11 @@ export default function Summary({ summary, params }) {
           label="똥 이월 횟수"
           value={`${dongCount}회`}
           highlight={dongCount > 0 ? "warning" : "neutral"}
+        />
+        <StatCard
+          label="샀다치고 횟수"
+          value={`${virtualBuyCount}회`}
+          highlight={virtualBuyCount > 0 ? "warning" : "neutral"}
         />
         <StatCard
           label="최대 낙폭 (MDD)"

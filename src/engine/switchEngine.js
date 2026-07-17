@@ -47,6 +47,7 @@ export function runBacktest(prices, investmentUSD, startFrom = null, maxPorang =
   let cycleStartIdx = startIdx;
   let cycleStartCash = cash; // 각 사이클 시작 시점의 현금. 사이클 수익률 계산 기준
   let dongCount = 0;
+  let virtualBuyCount = 0; // 샀다치고 발생 횟수
   let currentCycleNum = 1;
 
   for (let i = startIdx; i < prices.length; i++) {
@@ -114,6 +115,7 @@ export function runBacktest(prices, investmentUSD, startFrom = null, maxPorang =
             lastUpdownPrice = today.close;
             lp = today.close;
             virtualBuy = true;
+            virtualBuyCount += 1;
             action.push(`샀다치고 @${today.close.toFixed(2)}`);
           }
         }
@@ -272,6 +274,7 @@ export function runBacktest(prices, investmentUSD, startFrom = null, maxPorang =
       finalValue: parseFloat(finalValue.toFixed(2)),
       totalCycles: cycles.length,
       dongCount,
+      virtualBuyCount,
       maxDrawdown: parseFloat(maxDrawdown.toFixed(2)),
       currentCycleReturn,
     },
