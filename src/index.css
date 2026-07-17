@@ -578,6 +578,22 @@ body {
   color: var(--muted);
   margin-bottom: 8px;
 }
+.rolling-page { max-width: 1100px; margin: 0 auto; padding: 24px; }
+.rolling-page-empty {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 60vh;
+}
+.rolling-page-empty-inner {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.rolling-page-empty-title { font-size: 18px; color: var(--text); }
+.rolling-page-empty-desc { font-size: 13px; color: var(--muted); max-width: 320px; line-height: 1.7; }
 .rolling-empty {
   color: var(--muted);
   font-size: 13px;

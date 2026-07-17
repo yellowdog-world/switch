@@ -3,6 +3,7 @@ import Controls from "./components/Controls";
 import Charts from "./components/Charts";
 import Summary from "./components/Summary";
 import ScanPage from "./components/ScanPage";
+import RollingPage from "./components/RollingPage";
 import { runBacktest } from "./engine/switchEngine";
 import { fetchPrices } from "./utils/stockCache";
 
@@ -63,6 +64,7 @@ export default function App() {
             <nav className="main-nav">
               <button className={`nav-btn ${mode === "scan" ? "nav-active" : ""}`} onClick={() => setMode("scan")}>종목 스캔</button>
               <button className={`nav-btn ${mode === "backtest" ? "nav-active" : ""}`} onClick={() => setMode("backtest")}>백테스트</button>
+              <button className={`nav-btn ${mode === "rolling" ? "nav-active" : ""}`} onClick={() => setMode("rolling")}>롤링 분석</button>
             </nav>
           </div>
         </div>
@@ -70,6 +72,7 @@ export default function App() {
 
       <main className="main">
         {mode === "scan" && <ScanPage />}
+        {mode === "rolling" && <RollingPage prices={rawPrices} params={params} onGoBacktest={() => setMode("backtest")} />}
 
         {mode === "backtest" && (
           <>
@@ -91,7 +94,7 @@ export default function App() {
             {result && params && (
               <>
                 <Summary summary={result.summary} params={params} />
-                <Charts dailyLog={result.dailyLog} cycles={result.cycles} symbol={params.symbol} symbolName={params.symbolName} maxPorang={params.porang} prices={rawPrices} investment={params.investment} from={params.from} to={params.to} />
+                <Charts dailyLog={result.dailyLog} cycles={result.cycles} symbol={params.symbol} symbolName={params.symbolName} maxPorang={params.porang} />
               </>
             )}
           </>
