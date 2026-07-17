@@ -11,19 +11,23 @@ const WINDOW_OPTIONS = [
   { value: 6, label: "6개월" },
   { value: 12, label: "1년" },
   { value: 24, label: "2년" },
+  { value: 36, label: "3년" },
+  { value: 60, label: "5년" },
 ];
 
+// stepDays: 실제로 며칠씩 시작점을 밀지
 const STEP_OPTIONS = [
-  { value: 1, label: "1주" },
-  { value: 2, label: "2주" },
-  { value: 4, label: "4주" },
+  { value: 1,  label: "1일" },
+  { value: 7,  label: "1주" },
+  { value: 14, label: "2주" },
+  { value: 28, label: "4주" },
 ];
 
 // 날짜 기준으로 prices를 슬라이딩하며 runBacktest를 반복 호출.
 // 각 창의 수익률 분포를 통해 "어느 시점에 시작해도 이 전략이 통하는가"를 검증.
 export default function RollingChart({ prices, investment, maxPorang }) {
   const [windowMonths, setWindowMonths] = useState(12);
-  const [stepWeeks, setStepWeeks] = useState(4);
+  const [stepDays, setStepDays] = useState(28);
 
   const results = useMemo(() => {
     if (!prices || prices.length < 5) return [];
@@ -66,9 +70,9 @@ export default function RollingChart({ prices, investment, maxPorang }) {
         virtualBuyCount: result.summary.virtualBuyCount ?? 0,
       });
 
-      // stepWeeks × 7일 후의 첫 거래일로 이동
+      // stepDays일 후의 첫 거래일로 이동
       const nextObj = new Date(startDate);
-      nextObj.setDate(nextObj.getDate() + stepWeeks * 7);
+      nextObj.setDate(nextObj.getDate() + stepDays);
       const nextStr = nextObj.toISOString().split("T")[0];
       const nextIdx = dates.findIndex(d => d >= nextStr);
       if (nextIdx === -1 || nextIdx <= startIdx) break;
@@ -76,7 +80,7 @@ export default function RollingChart({ prices, investment, maxPorang }) {
     }
 
     return out;
-  }, [prices, investment, maxPorang, windowMonths, stepWeeks]);
+  }, [prices, investment, maxPorang, windowMonths, stepDays]);
 
   // 데이터 부족
   if (!prices || prices.length < 10) {
@@ -117,8 +121,8 @@ export default function RollingChart({ prices, investment, maxPorang }) {
           <div className="rolling-chips">
             {STEP_OPTIONS.map(o => (
               <button key={o.value}
-                className={`chip ${stepWeeks === o.value ? "chip-active" : ""}`}
-                onClick={() => setStepWeeks(o.value)}>
+                className={`chip ${stepDays === o.value ? "chip-active" : ""}`}
+                onClick={() => setStepDays(o.value)}>
                 {o.label}
               </button>
             ))}
