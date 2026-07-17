@@ -7,13 +7,33 @@ const DEFAULT_KRW = 15000000;
 const isKoreanSymbol = (sym) => sym?.endsWith(".KS");
 
 const toKSTDateStr = (d) => new Date(d.getTime() + 9 * 60 * 60 * 1000).toISOString().split("T")[0];
+const todayKST = () => toKSTDateStr(new Date());
+
+const PERIODS = [
+  { label: "1개월", months: 1 },
+  { label: "3개월", months: 3 },
+  { label: "6개월", months: 6 },
+  { label: "1년",   years: 1 },
+  { label: "2년",   years: 2 },
+  { label: "3년",   years: 3 },
+  { label: "5년",   years: 5 },
+  { label: "10년",  years: 10 },
+];
+
+function getPeriodDates(p) {
+  const to = new Date();
+  const from = new Date(to);
+  if (p.months) from.setMonth(from.getMonth() - p.months);
+  if (p.years)  from.setFullYear(from.getFullYear() - p.years);
+  return { from: toKSTDateStr(from), to: toKSTDateStr(to) };
+}
 
 const getDefaultFrom = () => {
   const d = new Date();
   d.setFullYear(d.getFullYear() - 3);
   return toKSTDateStr(d);
 };
-const getDefaultTo = () => toKSTDateStr(new Date());
+const getDefaultTo = () => todayKST();
 
 export default function RollingPage({ prices: backtestPrices, params: backtestParams }) {
   // 백테스트 실행 이력이 있으면 그 설정을 초기값으로 사용, 없으면 기본값
@@ -64,6 +84,16 @@ export default function RollingPage({ prices: backtestPrices, params: backtestPa
 
       {/* 설정 폼 */}
       <div className="rolling-form">
+        {/* 기간 빠른 선택 */}
+        <div className="rolling-form-periods">
+          {PERIODS.map(p => (
+            <button key={p.label}
+              className="chip"
+              onClick={() => { const d = getPeriodDates(p); setFrom(d.from); setTo(d.to); }}>
+              {p.label}
+            </button>
+          ))}
+        </div>
         <div className="rolling-form-row">
           <div className="rolling-form-field">
             <label className="rolling-form-label">종목</label>

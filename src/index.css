@@ -723,6 +723,12 @@ body {
   padding: 16px 20px;
   margin-bottom: 24px;
 }
+.rolling-form-periods {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 14px;
+}
 .rolling-form-row {
   display: flex;
   flex-wrap: wrap;
