@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { fetchPrices } from "../utils/stockCache";
 import { runBacktest } from "../engine/switchEngine";
 import {
@@ -167,75 +167,72 @@ function ActionBadge({ action }) {
 }
 
 // 사이클 일별 히스토리 모달
-function CycleModal({ cycle, dailyLog, type, onClose }) {
+function CycleDetail({ cycle, dailyLog, type, onClose, panelRef }) {
   useEffect(() => {
-    const onKey = (e) => { if (e.key === "Escape") onClose(); };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
+    panelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [cycle]);
 
-  const logs = dailyLog.filter(d => cycle.cycleNums.includes(d.cycleNum));
+  // 날짜 범위로 필터 (cycleNum은 종료일 당일에 이미 +1되므로 신뢰 불가)
+  const logs = dailyLog.filter(d => d.date >= cycle.startDate && d.date <= cycle.endDate);
   const color = TYPE_COLOR[type];
   const label = cycle.cycleNums.length === 1
     ? `사이클 #${cycle.cycleNums[0]}`
     : `사이클 #${cycle.cycleNums[0]}–#${cycle.cycleNums[cycle.cycleNums.length - 1]}`;
 
   return (
-    <div className="cycle-modal-backdrop" onClick={onClose}>
-      <div className="cycle-modal" onClick={e => e.stopPropagation()}>
-        <div className="cycle-modal-header">
-          <div>
-            <span className="cycle-modal-title">{label}</span>
-            <span className="cycle-modal-badge" style={{ background: color + "22", color }}>
-              {type}{cycle.dongCount > 0 ? ` (똥 ${cycle.dongCount}회)` : ""}
-            </span>
-          </div>
-          <div className="cycle-modal-meta">
+    <div className="cycle-detail-panel" ref={panelRef}>
+      <div className="cycle-modal-header">
+        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+          <span className="cycle-modal-title">{label}</span>
+          <span className="cycle-modal-badge" style={{ background: color + "22", color }}>
+            {type}{cycle.dongCount > 0 ? ` (똥 ${cycle.dongCount}회)` : ""}
+          </span>
+          <span className="cycle-modal-meta">
             {cycle.startDate} ~ {cycle.endDate} &nbsp;|&nbsp; {daysBetween(cycle.startDate, cycle.endDate)}일
             &nbsp;|&nbsp;
             <span style={{ color: cycle.pnlPct >= 0 ? "var(--green)" : "var(--red)", fontWeight: 700 }}>
               {cycle.pnlPct >= 0 ? "+" : ""}{cycle.pnlPct.toFixed(2)}%
             </span>
-          </div>
-          <button className="cycle-modal-close" onClick={onClose}>✕</button>
+          </span>
         </div>
-        <div className="cycle-modal-body">
-          <table className="cycle-log-table">
-            <thead>
-              <tr>
-                <th>날짜</th>
-                <th>종가</th>
-                <th>행동</th>
-                <th>포트</th>
-                <th>포랭</th>
-                <th>LP</th>
-                <th>현금</th>
-                <th>수익률</th>
+        <button className="cycle-modal-close" onClick={onClose}>✕</button>
+      </div>
+      <div className="cycle-detail-body">
+        <table className="cycle-log-table">
+          <thead>
+            <tr>
+              <th>날짜</th>
+              <th>종가</th>
+              <th>행동</th>
+              <th>포트</th>
+              <th>포랭</th>
+              <th>LP</th>
+              <th>현금</th>
+              <th>수익률</th>
+            </tr>
+          </thead>
+          <tbody>
+            {logs.map(d => (
+              <tr key={d.date} className={
+                d.updownBuy ? "log-row-buy"
+                : d.updownSell ? "log-row-sell"
+                : d.virtualBuy ? "log-row-virtual"
+                : ""
+              }>
+                <td className="log-date">{d.date.slice(2)}</td>
+                <td className="log-num">{d.close.toFixed(2)}</td>
+                <td><ActionBadge action={d.action} /></td>
+                <td className="log-num">{d.port}</td>
+                <td className="log-num">{d.porang}</td>
+                <td className="log-num log-muted">{d.lp ? d.lp.toFixed(2) : "-"}</td>
+                <td className="log-num log-muted">{Math.round(d.cash).toLocaleString()}</td>
+                <td className="log-num" style={{ color: d.returnPct >= 0 ? "var(--green)" : "var(--red)" }}>
+                  {d.returnPct >= 0 ? "+" : ""}{d.returnPct.toFixed(2)}%
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {logs.map(d => (
-                <tr key={d.date} className={
-                  d.updownBuy ? "log-row-buy"
-                  : d.updownSell ? "log-row-sell"
-                  : d.virtualBuy ? "log-row-virtual"
-                  : ""
-                }>
-                  <td className="log-date">{d.date.slice(2)}</td>
-                  <td className="log-num">{d.close.toFixed(2)}</td>
-                  <td><ActionBadge action={d.action} /></td>
-                  <td className="log-num">{d.port}</td>
-                  <td className="log-num">{d.porang}</td>
-                  <td className="log-num log-muted">{d.lp ? d.lp.toFixed(2) : "-"}</td>
-                  <td className="log-num log-muted">{Math.round(d.cash).toLocaleString()}</td>
-                  <td className="log-num" style={{ color: d.returnPct >= 0 ? "var(--green)" : "var(--red)" }}>
-                    {d.returnPct >= 0 ? "+" : ""}{d.returnPct.toFixed(2)}%
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );
@@ -252,6 +249,7 @@ export default function CyclePage() {
   const [cycles, setCycles] = useState(null);
   const [dailyLog, setDailyLog] = useState(null);
   const [selected, setSelected] = useState(null); // { cycle, type }
+  const detailPanelRef = useRef(null);
 
   const prefix = isKoreanSymbol(symbol) ? "₩" : "$";
 
@@ -414,11 +412,12 @@ export default function CyclePage() {
       )}
 
       {selected && dailyLog && (
-        <CycleModal
+        <CycleDetail
           cycle={selected.cycle}
           dailyLog={dailyLog}
           type={selected.type}
           onClose={() => setSelected(null)}
+          panelRef={detailPanelRef}
         />
       )}
     </section>
