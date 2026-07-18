@@ -232,15 +232,11 @@ export function runBacktest(prices, investmentUSD, startFrom = null, maxPorang =
     let cycleEndPnlPct = null;
     let cycleEndNum = null;
     if (updownSell && port === 0) {
-      // 사이클 수익률 = 이번 사이클 동안의 현금 변화율
-      const pnlPct = (cash - cycleStartCash) / cycleStartCash * 100;
-      cycleEndPnlPct = parseFloat(pnlPct.toFixed(2));
       cycleEndNum = currentCycleNum;
 
       if (rankBundles.length > 0) {
         // 똥 이월: 업다운은 다 팔았지만 떨법 묶음이 아직 남아 있는 경우
         // 남은 랭크 묶음을 포트로 전환해서 다음 사이클로 넘김
-        // → 이 묶음들의 원가도 totalUpdownCost에 포함해야 평단 계산이 정확해짐
         dongCount += 1;
         const dongBundles = [...rankBundles];
         port = dongBundles.length;
@@ -248,30 +244,39 @@ export function runBacktest(prices, investmentUSD, startFrom = null, maxPorang =
         rankBundles = [];
         action.push(`⚠️ 똥 이월! ${dongBundles.length}묶음 → 포트=${port}`);
 
+        // 이월 랭크 원가는 손실이 아니라 다음 사이클로 넘어가는 자산 → pnl에서 제외
+        const iweolCost = dongBundles.reduce((s, b) => s + b.amount, 0);
+        const dongPnl = cash - cycleStartCash + iweolCost;
+        const dongPnlPct = parseFloat((dongPnl / cycleStartCash * 100).toFixed(2));
+        cycleEndPnlPct = dongPnlPct;
+
         cycles.push({
           cycleNum: currentCycleNum,
           startDate: prices[cycleStartIdx].date,
           endDate: today.date,
-          pnl: cash - cycleStartCash,
-          pnlPct,
+          pnl: dongPnl,
+          pnlPct: dongPnlPct,
           startCash: cycleStartCash,
           dong: true,
           dongBundles: dongBundles.length,
           hadVirtualBuy: cycleHadVirtualBuy,
         });
-        cycleStartCash = cash;
+        // 후속 사이클 시작 원금 = 현금 + 이월 원가 (이월 자산을 원금에 포함)
+        cycleStartCash = cash + iweolCost;
         cycleStartIdx = i + 1;
         currentCycleNum += 1;
         cycleHadVirtualBuy = false;
       } else {
         // 깔끔 종료: 포트도 0, 랭크도 0 → lastUpdownPrice 초기화로 다음 사이클 새로 시작
+        const pnlPct = (cash - cycleStartCash) / cycleStartCash * 100;
+        cycleEndPnlPct = parseFloat(pnlPct.toFixed(2));
         lastUpdownPrice = null;
         cycles.push({
           cycleNum: currentCycleNum,
           startDate: prices[cycleStartIdx].date,
           endDate: today.date,
           pnl: cash - cycleStartCash,
-          pnlPct,
+          pnlPct: cycleEndPnlPct,
           startCash: cycleStartCash,
           dong: false,
           dongBundles: 0,

@@ -50,54 +50,6 @@ function daysBetween(a, b) {
   return Math.round((new Date(b) - new Date(a)) / 86400000);
 }
 
-// 똥 사이클을 후속 사이클과 합산해 에피소드로 병합
-function mergeEpisodes(cycles) {
-  const episodes = [];
-  let i = 0;
-  while (i < cycles.length) {
-    const c = cycles[i];
-    if (!c.dong) {
-      episodes.push({ ...c, cycleNums: [c.cycleNum], dongCount: 0 });
-      i++;
-    } else {
-      // 똥 체인 수집
-      let ep = {
-        cycleNums: [c.cycleNum],
-        startDate: c.startDate,
-        startCash: c.startCash,
-        pnl: c.pnl,
-        dong: true,
-        dongCount: 1,
-        hadVirtualBuy: c.hadVirtualBuy,
-      };
-      i++;
-      // 연속 똥도 합산
-      while (i < cycles.length && cycles[i].dong) {
-        const nx = cycles[i];
-        ep.cycleNums.push(nx.cycleNum);
-        ep.pnl += nx.pnl;
-        ep.dongCount++;
-        ep.hadVirtualBuy = ep.hadVirtualBuy || nx.hadVirtualBuy;
-        i++;
-      }
-      // 똥을 해소한 후속 사이클 흡수
-      if (i < cycles.length) {
-        const last = cycles[i];
-        ep.cycleNums.push(last.cycleNum);
-        ep.endDate = last.endDate;
-        ep.pnl += last.pnl;
-        ep.hadVirtualBuy = ep.hadVirtualBuy || last.hadVirtualBuy;
-        i++;
-      } else {
-        ep.endDate = cycles[i - 1].endDate;
-      }
-      ep.pnlPct = (ep.pnl / ep.startCash) * 100;
-      episodes.push(ep);
-    }
-  }
-  return episodes;
-}
-
 function classifyEpisode(ep) {
   if (ep.dong) return "똥";
   if (ep.hadVirtualBuy) return "샀다치고";
@@ -187,17 +139,14 @@ function CycleDetail({ cycle, dailyLog, type, onClose, panelRef, prefix = "$" })
   // 날짜 범위로 필터 (cycleNum은 종료일 당일에 이미 +1되므로 신뢰 불가)
   const logs = dailyLog.filter(d => d.date >= cycle.startDate && d.date <= cycle.endDate);
   const color = TYPE_COLOR[type];
-  const label = cycle.cycleNums.length === 1
-    ? `사이클 #${cycle.cycleNums[0]}`
-    : `사이클 #${cycle.cycleNums[0]}–#${cycle.cycleNums[cycle.cycleNums.length - 1]}`;
 
   return (
     <div className="cycle-detail-panel" ref={panelRef}>
       <div className="cycle-modal-header">
         <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-          <span className="cycle-modal-title">{label}</span>
+          <span className="cycle-modal-title">사이클 #{cycle.cycleNum}</span>
           <span className="cycle-modal-badge" style={{ background: color + "22", color }}>
-            {type}{cycle.dongCount > 0 ? ` (똥 ${cycle.dongCount}회)` : ""}
+            {type}
           </span>
           <span className="cycle-modal-meta">
             {cycle.startDate} ~ {cycle.endDate} &nbsp;|&nbsp; {daysBetween(cycle.startDate, cycle.endDate)}일
@@ -287,7 +236,7 @@ export default function CyclePage() {
       const inv = Number(investment) || DEFAULT_USD;
       const p = Math.max(1, Math.min(30, Number(porang) || 15));
       const result = runBacktest(data.prices, inv, from, p);
-      setCycles(mergeEpisodes(result.cycles));
+      setCycles(result.cycles);
       setDailyLog(result.dailyLog);
     } catch (e) {
       setError(e.message);
@@ -416,11 +365,10 @@ export default function CyclePage() {
                   <div className="cycle-dist-title" style={{ color: TYPE_COLOR[t] }}>{t} ({items.length})</div>
                   <div className="cycle-dist-list">
                     {sorted.map(ep => (
-                      <div key={ep.cycleNums[0]} className="cycle-dist-row cycle-dist-row-clickable"
+                      <div key={ep.cycleNum} className="cycle-dist-row cycle-dist-row-clickable"
                         onClick={() => setSelected({ cycle: ep, type: t })}>
                         <span className="cycle-dist-date">
                           {ep.startDate.slice(2)} ~<br />{ep.endDate.slice(2)}
-                          {ep.dongCount > 0 && <span style={{ color: "#f87171", fontSize: 10 }}> 똥{ep.dongCount}회</span>}
                         </span>
                         <span className="cycle-dist-return" style={{ color: ep.pnlPct >= 0 ? "var(--green)" : "var(--red)" }}>
                           {ep.pnlPct >= 0 ? "+" : ""}{ep.pnlPct.toFixed(2)}%
