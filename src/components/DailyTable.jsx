@@ -61,7 +61,9 @@ export default function DailyTable({ dailyLog, maxPorang = 15, symbol = "SOXL" }
   const prefix = symbol.endsWith(".KS") ? "₩" : "$";
   const firstLog = dailyLog[0];
   const lastLog = dailyLog[dailyLog.length - 1];
-  const totalPnl = lastLog.totalValue - firstLog.totalValue;
+  // 마지막 날이 똥 사이클 종료일이면 cycleStartCash(= cash + iweolCost)로 표시
+  const lastDisplayValue = lastLog.cycleEndPnlPct !== null ? lastLog.cycleStartCash : lastLog.totalValue;
+  const totalPnl = lastDisplayValue - firstLog.totalValue;
   const totalPnlPct = (totalPnl / firstLog.totalValue) * 100;
 
   const filtered = dailyLog.filter(d => {
@@ -76,7 +78,7 @@ export default function DailyTable({ dailyLog, maxPorang = 15, symbol = "SOXL" }
       <div className="backtest-period-summary">
         <span>{prefix}{Math.round(firstLog.totalValue).toLocaleString()}</span>
         <span className="bps-arrow">→</span>
-        <span>{prefix}{Math.round(lastLog.totalValue).toLocaleString()}</span>
+        <span>{prefix}{Math.round(lastDisplayValue).toLocaleString()}</span>
         <span className="bps-pnl" style={{ color: totalPnl >= 0 ? "var(--green)" : "var(--red)" }}>
           ({totalPnl >= 0 ? "+" : ""}{prefix}{Math.round(Math.abs(totalPnl)).toLocaleString()}
           &nbsp;/&nbsp;
