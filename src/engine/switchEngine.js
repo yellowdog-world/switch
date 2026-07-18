@@ -159,7 +159,8 @@ export function runBacktest(prices, investmentUSD, startFrom = null, maxPorang =
               action.push(`샀다치고 (cash 부족) @${today.close.toFixed(2)}`);
             }
           } else {
-            // 샀다치고
+            // 샀다치고 — 실제 매수했다면 필요했을 금액 누적
+            extraBuyNeeded += Math.floor(getUnitAmount(porang) / today.close) * today.close;
             if (virtualBuyMode === 'update_lp') {
               lastUpdownPrice = today.close;
               lp = today.close;
