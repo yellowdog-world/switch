@@ -179,7 +179,7 @@ function ActionBadge({ action }) {
 }
 
 // 사이클 일별 히스토리 모달
-function CycleDetail({ cycle, dailyLog, type, onClose, panelRef }) {
+function CycleDetail({ cycle, dailyLog, type, onClose, panelRef, prefix = "$" }) {
   useEffect(() => {
     panelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [cycle]);
@@ -202,9 +202,16 @@ function CycleDetail({ cycle, dailyLog, type, onClose, panelRef }) {
           <span className="cycle-modal-meta">
             {cycle.startDate} ~ {cycle.endDate} &nbsp;|&nbsp; {daysBetween(cycle.startDate, cycle.endDate)}일
             &nbsp;|&nbsp;
+            {prefix}{Math.round(cycle.startCash).toLocaleString()}
+            &nbsp;→&nbsp;
+            {prefix}{Math.round(cycle.startCash + cycle.pnl).toLocaleString()}
+            &nbsp;(
             <span style={{ color: cycle.pnlPct >= 0 ? "var(--green)" : "var(--red)", fontWeight: 700 }}>
+              {cycle.pnl >= 0 ? "+" : ""}{prefix}{Math.round(Math.abs(cycle.pnl)).toLocaleString()}
+              &nbsp;/&nbsp;
               {cycle.pnlPct >= 0 ? "+" : ""}{cycle.pnlPct.toFixed(2)}%
             </span>
+            )
           </span>
         </div>
         <button className="cycle-modal-close" onClick={onClose}>✕</button>
@@ -220,7 +227,7 @@ function CycleDetail({ cycle, dailyLog, type, onClose, panelRef }) {
               <th>포트</th>
               <th>랭크</th>
               <th>LP</th>
-              <th>현금</th>
+              <th>평가액</th>
               <th>수익률</th>
             </tr>
           </thead>
@@ -239,9 +246,9 @@ function CycleDetail({ cycle, dailyLog, type, onClose, panelRef }) {
                 <td className="log-num">{d.port}</td>
                 <td className="log-num">{d.rank}</td>
                 <td className="log-num log-muted">{d.lp ? d.lp.toFixed(2) : "-"}</td>
-                <td className="log-num log-muted">{Math.round(d.cash).toLocaleString()}</td>
-                <td className="log-num" style={{ color: d.returnPct >= 0 ? "var(--green)" : "var(--red)" }}>
-                  {d.returnPct >= 0 ? "+" : ""}{d.returnPct.toFixed(2)}%
+                <td className="log-num log-muted">{Math.round(d.totalValue).toLocaleString()}</td>
+                <td className="log-num" style={{ color: d.totalValue >= cycle.startCash ? "var(--green)" : "var(--red)" }}>
+                  {(() => { const r = (d.totalValue / cycle.startCash - 1) * 100; return `${r >= 0 ? "+" : ""}${r.toFixed(2)}%`; })()}
                 </td>
               </tr>
             ))}
@@ -441,6 +448,7 @@ export default function CyclePage() {
           type={selected.type}
           onClose={() => setSelected(null)}
           panelRef={detailPanelRef}
+          prefix={prefix}
         />
       )}
     </section>
