@@ -1303,6 +1303,7 @@ body {
 }
 .cycle-log-table th:first-child,
 .cycle-log-table th:nth-child(3) { text-align: left; }
+.cycle-log-table th:nth-child(3) { min-width: 160px; }
 .cycle-log-table td {
   padding: 6px 10px;
   text-align: right;
@@ -1311,6 +1312,7 @@ body {
 }
 .cycle-log-table td:first-child,
 .cycle-log-table td:nth-child(3) { text-align: left; }
+.cycle-log-table td:nth-child(3) { min-width: 160px; }
 .log-row-buy  { background: rgba(96,165,250,0.06); }
 .log-row-sell { background: rgba(52,211,153,0.06); }
 .log-row-virtual { background: rgba(250,204,21,0.05); }

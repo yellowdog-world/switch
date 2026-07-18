@@ -122,8 +122,8 @@ function ActionBadge({ action }) {
         else if (p.includes("업다운 매도")) color = "var(--green)";
         else if (p.includes("샀다치고")) color = "#facc15";
         else if (p.includes("똥")) color = "#f87171";
-        else if (p.includes("랭크 매수")) color = "#a78bfa";
-        else if (p.includes("랭크 매도")) color = "#34d399";
+        else if (p.includes("떨법 매수")) color = "#a78bfa";
+        else if (p.includes("떨법 매도")) color = "#f472b6";
         return <span key={i} style={{ color, fontSize: 11 }}>{p}</span>;
       })}
     </span>
