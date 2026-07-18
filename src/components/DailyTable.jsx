@@ -171,10 +171,24 @@ export default function DailyTable({ dailyLog, maxPorang = 15, symbol = "SOXL" }
                     </span>
                   ) : "-"}
                 </td>
-                <td>${d.totalValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
-                <td className={(d.totalValue / d.cycleStartCash - 1) >= 0 ? "val-green" : "val-red"}>
-                  {(() => { const r = (d.totalValue / d.cycleStartCash - 1) * 100; return `${r >= 0 ? "+" : ""}${r.toFixed(2)}%`; })()}
-                </td>
+                {(() => {
+                  // 사이클 종료일: cycleEndPnlPct(이월 원가 기준)를 사용해 badge와 일치시킴
+                  // 그 외: totalValue 기준 사이클 수익률
+                  const returnPct = d.cycleEndPnlPct !== null
+                    ? d.cycleEndPnlPct
+                    : (d.totalValue / d.cycleStartCash - 1) * 100;
+                  const displayValue = d.cycleEndPnlPct !== null
+                    ? Math.round(d.cycleStartCash * (1 + d.cycleEndPnlPct / 100))
+                    : d.totalValue;
+                  return (
+                    <>
+                      <td>${displayValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
+                      <td className={returnPct >= 0 ? "val-green" : "val-red"}>
+                        {`${returnPct >= 0 ? "+" : ""}${returnPct.toFixed(2)}%`}
+                      </td>
+                    </>
+                  );
+                })()}
                 <td>
                   {d.cycleEndPnlPct !== null ? (
                     <span className={`cycle-badge ${d.cycleEndPnlPct >= 0 ? "cycle-pos" : "cycle-neg"}`}>
