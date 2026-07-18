@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { fetchPrices } from "../utils/stockCache";
 import { runBacktest } from "../engine/switchEngine";
 import {
@@ -82,7 +82,7 @@ function StatCard({ type, data }) {
   );
 }
 
-const CustomTooltip = ({ active, payload }) => {
+const ScatterTooltip = ({ active, payload }) => {
   if (!active || !payload?.length) return null;
   const d = payload[0].payload;
   return (
@@ -98,6 +98,98 @@ const CustomTooltip = ({ active, payload }) => {
   );
 };
 
+// 행동 문자열에서 표시용 뱃지 생성
+function ActionBadge({ action }) {
+  if (!action || action === "-") return <span style={{ color: "var(--muted)" }}>-</span>;
+  const parts = action.split(" / ");
+  return (
+    <span style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+      {parts.map((p, i) => {
+        let color = "var(--muted)";
+        if (p.includes("업다운 매수")) color = "#60a5fa";
+        else if (p.includes("업다운 매도")) color = "var(--green)";
+        else if (p.includes("샀다치고")) color = "#facc15";
+        else if (p.includes("똥")) color = "#f87171";
+        else if (p.includes("랭크 매수")) color = "#a78bfa";
+        else if (p.includes("랭크 매도")) color = "#34d399";
+        return <span key={i} style={{ color, fontSize: 11 }}>{p}</span>;
+      })}
+    </span>
+  );
+}
+
+// 사이클 일별 히스토리 모달
+function CycleModal({ cycle, dailyLog, type, onClose }) {
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  const logs = dailyLog.filter(d => d.cycleNum === cycle.cycleNum);
+  const color = TYPE_COLOR[type];
+
+  return (
+    <div className="cycle-modal-backdrop" onClick={onClose}>
+      <div className="cycle-modal" onClick={e => e.stopPropagation()}>
+        <div className="cycle-modal-header">
+          <div>
+            <span className="cycle-modal-title">사이클 #{cycle.cycleNum}</span>
+            <span className="cycle-modal-badge" style={{ background: color + "22", color }}>
+              {type}
+            </span>
+          </div>
+          <div className="cycle-modal-meta">
+            {cycle.startDate} ~ {cycle.endDate} &nbsp;|&nbsp; {daysBetween(cycle.startDate, cycle.endDate)}일
+            &nbsp;|&nbsp;
+            <span style={{ color: cycle.pnlPct >= 0 ? "var(--green)" : "var(--red)", fontWeight: 700 }}>
+              {cycle.pnlPct >= 0 ? "+" : ""}{cycle.pnlPct.toFixed(2)}%
+            </span>
+          </div>
+          <button className="cycle-modal-close" onClick={onClose}>✕</button>
+        </div>
+        <div className="cycle-modal-body">
+          <table className="cycle-log-table">
+            <thead>
+              <tr>
+                <th>날짜</th>
+                <th>종가</th>
+                <th>행동</th>
+                <th>포트</th>
+                <th>포랭</th>
+                <th>LP</th>
+                <th>현금</th>
+                <th>수익률</th>
+              </tr>
+            </thead>
+            <tbody>
+              {logs.map(d => (
+                <tr key={d.date} className={
+                  d.updownBuy ? "log-row-buy"
+                  : d.updownSell ? "log-row-sell"
+                  : d.virtualBuy ? "log-row-virtual"
+                  : ""
+                }>
+                  <td className="log-date">{d.date.slice(2)}</td>
+                  <td className="log-num">{d.close.toFixed(2)}</td>
+                  <td><ActionBadge action={d.action} /></td>
+                  <td className="log-num">{d.port}</td>
+                  <td className="log-num">{d.porang}</td>
+                  <td className="log-num log-muted">{d.lp ? d.lp.toFixed(2) : "-"}</td>
+                  <td className="log-num log-muted">{Math.round(d.cash).toLocaleString()}</td>
+                  <td className="log-num" style={{ color: d.returnPct >= 0 ? "var(--green)" : "var(--red)" }}>
+                    {d.returnPct >= 0 ? "+" : ""}{d.returnPct.toFixed(2)}%
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function CyclePage() {
   const [symbol, setSymbol] = useState("SOXL");
   const [from, setFrom] = useState(getDefaultFrom());
@@ -107,6 +199,8 @@ export default function CyclePage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [cycles, setCycles] = useState(null);
+  const [dailyLog, setDailyLog] = useState(null);
+  const [selected, setSelected] = useState(null); // { cycle, type }
 
   const prefix = isKoreanSymbol(symbol) ? "₩" : "$";
 
@@ -114,6 +208,7 @@ export default function CyclePage() {
     if (!symbol || !from || !to) return;
     setLoading(true);
     setError(null);
+    setSelected(null);
     try {
       const lb = new Date(from);
       lb.setDate(lb.getDate() - 7);
@@ -123,6 +218,7 @@ export default function CyclePage() {
       const p = Math.max(1, Math.min(30, Number(porang) || 15));
       const result = runBacktest(data.prices, inv, from, p);
       setCycles(result.cycles);
+      setDailyLog(result.dailyLog);
     } catch (e) {
       setError(e.message);
     } finally {
@@ -204,14 +300,12 @@ export default function CyclePage() {
 
       {cycles && (
         <>
-          {/* 요약 카드 */}
           <div className="cycle-stat-grid">
             {TYPE_ORDER.map(t => (
               <StatCard key={t} type={t} data={stats(grouped[t] || [])} />
             ))}
           </div>
 
-          {/* 산포도: 기간 vs 수익률 */}
           <div className="sens-section">
             <div className="sens-section-title">사이클 기간 vs 수익률</div>
             <div className="sens-guide">각 점은 사이클 1개. X축=기간(일), Y축=사이클 수익률(%). 색상으로 타입 구분.</div>
@@ -224,7 +318,7 @@ export default function CyclePage() {
                 <YAxis dataKey="pnlPct" name="수익률" unit="%"
                   tick={{ fill: "var(--text-muted)", fontSize: 11 }} />
                 <ReferenceLine y={0} stroke="rgba(255,255,255,0.25)" strokeDasharray="4 4" />
-                <Tooltip content={<CustomTooltip />} />
+                <Tooltip content={<ScatterTooltip />} />
                 <Legend wrapperStyle={{ paddingTop: 16, fontSize: 13 }} />
                 {scatterData.map(({ type, color, points }) => (
                   <Scatter key={type} name={type} data={points} fill={color} fillOpacity={0.75} />
@@ -233,7 +327,6 @@ export default function CyclePage() {
             </ResponsiveContainer>
           </div>
 
-          {/* 수익률 분포 (단순 리스트) */}
           <div className="cycle-dist-grid">
             {TYPE_ORDER.map(t => {
               const items = grouped[t] || [];
@@ -244,7 +337,8 @@ export default function CyclePage() {
                   <div className="cycle-dist-title" style={{ color: TYPE_COLOR[t] }}>{t} ({items.length})</div>
                   <div className="cycle-dist-list">
                     {sorted.map(c => (
-                      <div key={c.cycleNum} className="cycle-dist-row">
+                      <div key={c.cycleNum} className="cycle-dist-row cycle-dist-row-clickable"
+                        onClick={() => setSelected({ cycle: c, type: t })}>
                         <span className="cycle-dist-date">{c.startDate.slice(2)} ~<br />{c.endDate.slice(2)}</span>
                         <span className="cycle-dist-return" style={{ color: c.pnlPct >= 0 ? "var(--green)" : "var(--red)" }}>
                           {c.pnlPct >= 0 ? "+" : ""}{c.pnlPct.toFixed(2)}%
@@ -263,6 +357,15 @@ export default function CyclePage() {
         <div className="rolling-empty" style={{ marginTop: 40 }}>
           설정을 입력하고 분석을 실행하세요.
         </div>
+      )}
+
+      {selected && dailyLog && (
+        <CycleModal
+          cycle={selected.cycle}
+          dailyLog={dailyLog}
+          type={selected.type}
+          onClose={() => setSelected(null)}
+        />
       )}
     </section>
   );

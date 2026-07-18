@@ -1231,3 +1231,96 @@ body {
   .cycle-stat-grid { grid-template-columns: 1fr; }
   .cycle-dist-grid { grid-template-columns: 1fr; }
 }
+
+/* ── 사이클 모달 ─────────────────────────────────────────────────────── */
+.cycle-dist-row-clickable {
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.cycle-dist-row-clickable:hover { background: rgba(255,255,255,0.07); }
+
+.cycle-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.65);
+  z-index: 200;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+.cycle-modal {
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  border-radius: 16px 16px 0 0;
+  width: 100%;
+  max-width: 860px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  animation: slideUp 0.2s ease;
+}
+@keyframes slideUp {
+  from { transform: translateY(40px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+.cycle-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+.cycle-modal-title { font-size: 15px; font-weight: 700; }
+.cycle-modal-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+.cycle-modal-meta { font-size: 12px; color: var(--muted); flex: 1; }
+.cycle-modal-close {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px 8px;
+  margin-left: auto;
+}
+.cycle-modal-close:hover { color: var(--text); }
+.cycle-modal-body { overflow-y: auto; padding: 0 4px 16px; }
+
+.cycle-log-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.cycle-log-table th {
+  padding: 8px 10px;
+  text-align: right;
+  color: var(--muted);
+  font-weight: 500;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+  position: sticky;
+  top: 0;
+  background: var(--bg2);
+}
+.cycle-log-table th:first-child,
+.cycle-log-table th:nth-child(3) { text-align: left; }
+.cycle-log-table td {
+  padding: 6px 10px;
+  text-align: right;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+  vertical-align: top;
+}
+.cycle-log-table td:first-child,
+.cycle-log-table td:nth-child(3) { text-align: left; }
+.log-row-buy  { background: rgba(96,165,250,0.06); }
+.log-row-sell { background: rgba(52,211,153,0.06); }
+.log-row-virtual { background: rgba(250,204,21,0.05); }
+.log-date { color: var(--muted); white-space: nowrap; font-size: 11px; }
+.log-num  { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.log-muted { color: var(--muted); }
