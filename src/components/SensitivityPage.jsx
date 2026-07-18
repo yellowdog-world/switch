@@ -33,6 +33,22 @@ function getDefaultFrom() {
 }
 
 const PORANG_SWEEP = [8, 10, 12, 15, 18, 20, 30];
+
+// 시작일을 stepDays씩 밀며 롤링 백테스트 → 승률(%) 반환
+function computeRollingWinRate(priceData, from, porang, buyRate, opts = {}, stepDays = 14) {
+  const wins = [], end = priceData[priceData.length - 1]?.date;
+  const cur = new Date(from);
+  while (true) {
+    const startStr = cur.toISOString().split("T")[0];
+    if (startStr >= end) break;
+    const remaining = priceData.filter(p => p.date >= startStr);
+    if (remaining.length < 5) break;
+    const s = runBacktest(priceData, 10000, startStr, porang, buyRate, opts).summary;
+    wins.push(s.totalReturn > 0);
+    cur.setDate(cur.getDate() + stepDays);
+  }
+  return wins.length ? Math.round((wins.filter(Boolean).length / wins.length) * 100) : null;
+}
 const BUYRATE_SWEEP = [0.001, 0.002, 0.003, 0.005];
 
 // 매트릭스 내 최솟값~최댓값 기준 상대 색상
@@ -120,6 +136,8 @@ function BestSummary({ results }) {
 
   const baseReturn = results.virtualBuyCompare[0].summary.totalReturn;
   const findBest = (arr) => arr.reduce((b, r) => r.summary.totalReturn > b.summary.totalReturn ? r : b);
+  const rr = results.rollingRates;
+  const rrKeys = ["matrix","virtualBuy","updownSell","tteobSell","tteobBuy","firstDay"];
 
   const rows = [
     {
@@ -128,17 +146,22 @@ function BestSummary({ results }) {
       currentLabel: `${results.basePorang}분할 / ${(results.baseBuyRate * 100).toFixed(2)}%`,
       bestVal: bestMatrix.totalReturn,
       currentVal: baseReturn,
+      currentWR: rr?.matrix?.current,
+      bestWR: rr?.matrix?.best,
     },
     ...["virtualBuyCompare","updownSellCompare","tteobSellCompare","tteobBuyCompare","firstDayCompare"].map((key, i) => {
       const labels = ["샀다치고 변형","업다운 매도 조건","떨법 매도 조건","떨법 매수 지정가","첫날 급등 필터"];
       const grp = results[key];
       const best = findBest(grp);
+      const rrKey = rrKeys[i + 1];
       return {
         label: labels[i],
         bestLabel: CLEAN_LABEL(best.label),
         currentLabel: CLEAN_LABEL(grp[0].label),
         bestVal: best.summary.totalReturn,
         currentVal: grp[0].summary.totalReturn,
+        currentWR: rr?.[rrKey]?.current,
+        bestWR: rr?.[rrKey]?.best,
       };
     }),
   ];
@@ -169,9 +192,15 @@ function BestSummary({ results }) {
             <div key={i} className="sens-best-row">
               <span className="sens-best-label">{row.label}</span>
               <span className="sens-best-val sens-muted">{row.currentLabel}</span>
-              <span className="sens-best-return sens-muted">{fmtReturn(row.currentVal)}</span>
+              <span className="sens-best-return sens-muted">
+                {fmtReturn(row.currentVal)}
+                {row.currentWR != null && <span className="sens-win-rate">승률 {row.currentWR}%</span>}
+              </span>
               <span className="sens-best-val">{row.bestLabel}</span>
-              <span className="sens-best-return" style={{ color: row.bestVal >= 0 ? "var(--green)" : "var(--red)" }}>{fmtReturn(row.bestVal)}</span>
+              <span className="sens-best-return" style={{ color: row.bestVal >= 0 ? "var(--green)" : "var(--red)" }}>
+                {fmtReturn(row.bestVal)}
+                {row.bestWR != null && <span className="sens-win-rate">{row.bestWR}%</span>}
+              </span>
               <span className="sens-best-diff" style={{ color: isSame ? "var(--muted)" : isNoise ? "rgba(255,200,80,0.7)" : diff > 0 ? "var(--green)" : "var(--red)" }}>
                 {isSame ? "동일" : `${diff >= 0 ? "+" : ""}${diff.toFixed(1)}%p`}
                 {isNoise && <span className="sens-noise-tag">노이즈</span>}
@@ -308,37 +337,40 @@ export default function SensitivityPage() {
         BUYRATE_SWEEP.map(br => runBacktest(priceData, inv, from, p, br).summary)
       );
 
-      // Groups 2-6: 기준 설정으로 opts만 바꿔가며 비교
-      const run = (opts) => runBacktest(priceData, inv, from, basePorang, baseBuyRate, opts).summary;
+      // Groups 2-6: 기준 설정으로 opts만 바꿔가며 비교 (opts 저장)
+      const runItem = (label, opts) => ({
+        label, opts,
+        summary: runBacktest(priceData, inv, from, basePorang, baseBuyRate, opts).summary,
+      });
 
       const virtualBuyCompare = [
-        { label: "현재 (LP 갱신)", summary: run({ virtualBuyMode: "update_lp" }) },
-        { label: "비활성화 (LP 고정)", summary: run({ virtualBuyMode: "keep_lp" }) },
+        runItem("현재 (LP 갱신)", { virtualBuyMode: "update_lp" }),
+        runItem("비활성화 (LP 고정)", { virtualBuyMode: "keep_lp" }),
       ];
 
       const updownSellCompare = [
-        { label: "종가 ≥ LP (현재)", summary: run({ updownSellBuffer: 0 }) },
-        { label: "종가 ≥ LP + 0.5%", summary: run({ updownSellBuffer: 0.005 }) },
-        { label: "종가 ≥ LP + 1.0%", summary: run({ updownSellBuffer: 0.01 }) },
+        runItem("종가 ≥ LP (현재)", { updownSellBuffer: 0 }),
+        runItem("종가 ≥ LP + 0.5%", { updownSellBuffer: 0.005 }),
+        runItem("종가 ≥ LP + 1.0%", { updownSellBuffer: 0.01 }),
       ];
 
       const tteobSellCompare = [
-        { label: "매수가 이상 (현재)", summary: run({ tteobSellBuffer: 0 }) },
-        { label: "매수가 + 0.5%", summary: run({ tteobSellBuffer: 0.005 }) },
-        { label: "매수가 + 1.0%", summary: run({ tteobSellBuffer: 0.01 }) },
+        runItem("매수가 이상 (현재)", { tteobSellBuffer: 0 }),
+        runItem("매수가 + 0.5%", { tteobSellBuffer: 0.005 }),
+        runItem("매수가 + 1.0%", { tteobSellBuffer: 0.01 }),
       ];
 
       const tteobBuyCompare = [
-        { label: "전일종가 − $0.01 (현재)", summary: run({ tteobOrderPct: null }) },
-        { label: "전일종가 × 0.995 (−0.5%)", summary: run({ tteobOrderPct: 0.005 }) },
-        { label: "전일종가 × 0.99 (−1%)", summary: run({ tteobOrderPct: 0.01 }) },
+        runItem("전일종가 − $0.01 (현재)", { tteobOrderPct: null }),
+        runItem("전일종가 × 0.995 (−0.5%)", { tteobOrderPct: 0.005 }),
+        runItem("전일종가 × 0.99 (−1%)", { tteobOrderPct: 0.01 }),
       ];
 
       const firstDayCompare = [
-        { label: "+10% 초과 제외 (현재)", summary: run({ firstDayGapFilter: 1.10 }) },
-        { label: "+5% 초과 제외 (엄격)", summary: run({ firstDayGapFilter: 1.05 }) },
-        { label: "+15% 초과 제외 (관대)", summary: run({ firstDayGapFilter: 1.15 }) },
-        { label: "+20% 초과 제외", summary: run({ firstDayGapFilter: 1.20 }) },
+        runItem("+10% 초과 제외 (현재)", { firstDayGapFilter: 1.10 }),
+        runItem("+5% 초과 제외 (엄격)", { firstDayGapFilter: 1.05 }),
+        runItem("+15% 초과 제외 (관대)", { firstDayGapFilter: 1.15 }),
+        runItem("+20% 초과 제외", { firstDayGapFilter: 1.20 }),
       ];
 
       // 1D 스윕: 분할수만 변경 (baseBuyRate 고정)
@@ -355,7 +387,27 @@ export default function SensitivityPage() {
         summary: runBacktest(priceData, inv, from, basePorang, br).summary,
       }));
 
-      setResults({ matrix, porangSweep, buyRateSweep, virtualBuyCompare, updownSellCompare, tteobSellCompare, tteobBuyCompare, firstDayCompare, basePorang, baseBuyRate });
+      // 롤링 승률 계산 (현재 vs 최적 조합)
+      const wr = (p, br, opts) => computeRollingWinRate(priceData, from, p, br, opts);
+      const findBestItem = arr => arr.reduce((b, r) => r.summary.totalReturn > b.summary.totalReturn ? r : b);
+
+      let bestMatrixP = basePorang, bestMatrixBr = baseBuyRate, bestMatrixRet = -Infinity;
+      PORANG_SWEEP.forEach((p, pi) => BUYRATE_SWEEP.forEach((br, bi) => {
+        if (matrix[pi][bi].totalReturn > bestMatrixRet) {
+          bestMatrixRet = matrix[pi][bi].totalReturn; bestMatrixP = p; bestMatrixBr = br;
+        }
+      }));
+
+      const rollingRates = {
+        matrix:    { current: wr(basePorang, baseBuyRate, {}),     best: wr(bestMatrixP, bestMatrixBr, {}) },
+        virtualBuy:{ current: wr(basePorang, baseBuyRate, virtualBuyCompare[0].opts),  best: wr(basePorang, baseBuyRate, findBestItem(virtualBuyCompare).opts) },
+        updownSell:{ current: wr(basePorang, baseBuyRate, updownSellCompare[0].opts),  best: wr(basePorang, baseBuyRate, findBestItem(updownSellCompare).opts) },
+        tteobSell: { current: wr(basePorang, baseBuyRate, tteobSellCompare[0].opts),   best: wr(basePorang, baseBuyRate, findBestItem(tteobSellCompare).opts) },
+        tteobBuy:  { current: wr(basePorang, baseBuyRate, tteobBuyCompare[0].opts),    best: wr(basePorang, baseBuyRate, findBestItem(tteobBuyCompare).opts) },
+        firstDay:  { current: wr(basePorang, baseBuyRate, firstDayCompare[0].opts),    best: wr(basePorang, baseBuyRate, findBestItem(firstDayCompare).opts) },
+      };
+
+      setResults({ matrix, porangSweep, buyRateSweep, virtualBuyCompare, updownSellCompare, tteobSellCompare, tteobBuyCompare, firstDayCompare, basePorang, baseBuyRate, rollingRates });
     } catch (e) {
       setError(e.message);
     } finally {

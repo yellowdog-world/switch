@@ -993,12 +993,21 @@ body {
 .sens-best-return {
   font-size: 13px;
   font-weight: 600;
-  white-space: nowrap;
   text-align: right;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
 }
 .sens-best-return.sens-muted {
   font-weight: 400;
   color: rgba(255,255,255,0.45) !important;
+}
+.sens-win-rate {
+  font-size: 10px;
+  font-weight: 400;
+  color: rgba(255,255,255,0.4);
+  white-space: nowrap;
 }
 .sens-best-diff {
   font-size: 12px;
