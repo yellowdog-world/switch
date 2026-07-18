@@ -1,6 +1,13 @@
-export default function Summary({ summary, params }) {
+export default function Summary({ summary, params, dailyLog }) {
   const { totalReturn, finalValue, totalCycles, dongCount, virtualBuyCount, maxDrawdown } = summary;
   const isPositive = totalReturn >= 0;
+
+  const firstClose = dailyLog?.[0]?.close;
+  const lastClose = dailyLog?.[dailyLog.length - 1]?.close;
+  const buyHoldReturn = firstClose && lastClose
+    ? ((lastClose - firstClose) / firstClose) * 100
+    : null;
+  const prefix = params.symbol.endsWith(".KS") ? "₩" : "$";
 
   return (
     <section className="summary-section">
@@ -40,16 +47,25 @@ export default function Summary({ summary, params }) {
           value={`-${maxDrawdown.toFixed(2)}%`}
           highlight="negative"
         />
+        {buyHoldReturn !== null && (
+          <StatCard
+            label={`${params.symbol} 본주 보유`}
+            value={`${buyHoldReturn >= 0 ? "+" : ""}${buyHoldReturn.toFixed(2)}%`}
+            sub={`${prefix}${firstClose.toFixed(2)} → ${prefix}${lastClose.toFixed(2)}`}
+            highlight={buyHoldReturn >= 0 ? "positive" : "negative"}
+          />
+        )}
       </div>
     </section>
   );
 }
 
-function StatCard({ label, value, highlight }) {
+function StatCard({ label, value, sub, highlight }) {
   return (
     <div className={`stat-card ${highlight ? `stat-${highlight}` : ""}`}>
       <div className="stat-label">{label}</div>
       <div className="stat-value">{value}</div>
+      {sub && <div className="stat-sub">{sub}</div>}
     </div>
   );
 }

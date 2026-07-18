@@ -142,7 +142,7 @@ export default function App() {
 
             {result && params && (
               <>
-                <Summary summary={result.summary} params={params} />
+                <Summary summary={result.summary} params={params} dailyLog={result.dailyLog} />
                 <Charts dailyLog={result.dailyLog} cycles={result.cycles} symbol={params.symbol} symbolName={params.symbolName} maxPorang={params.porang} />
               </>
             )}

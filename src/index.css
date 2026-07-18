@@ -240,6 +240,7 @@ body {
 .stat-positive .stat-value { color: var(--green); }
 .stat-negative .stat-value { color: var(--red); }
 .stat-warning .stat-value { color: var(--accent2); }
+.stat-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
 
 /* ── Charts ── */
 .charts-section {
