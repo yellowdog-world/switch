@@ -22,6 +22,18 @@ const PERIODS = [
   { key: "10y", label: "10년" },
 ];
 
+const EVENTS = [
+  { label: "2018 무역전쟁",     from: "2018-10-01", to: "2018-12-31", type: "crash" },
+  { label: "COVID 폭락",        from: "2020-02-20", to: "2020-03-18", type: "crash" },
+  { label: "2022 금리인상 폭락", from: "2021-11-01", to: "2022-10-31", type: "crash" },
+  { label: "엔캐리 청산",        from: "2024-07-10", to: "2024-08-05", type: "crash" },
+  { label: "관세전쟁",           from: "2025-02-18", to: "2025-04-07", type: "crash" },
+  { label: "COVID 반등",         from: "2020-03-18", to: "2021-11-22", type: "rally" },
+  { label: "AI 반등",            from: "2022-10-13", to: "2023-07-31", type: "rally" },
+  { label: "AI 랠리",            from: "2024-04-19", to: "2024-06-18", type: "rally" },
+  { label: "트럼프 당선 랠리",   from: "2024-11-05", to: "2024-11-25", type: "rally" },
+];
+
 const toKSTDateStr = (date) => {
   const kst = new Date(date.getTime() + 9 * 60 * 60 * 1000);
   return kst.toISOString().split("T")[0];
@@ -194,6 +206,15 @@ export default function Controls({ onRun, loading }) {
 
         <div className="control-group">
           <label>기간</label>
+          <div className="event-chips" style={{ marginBottom: 8 }}>
+            {EVENTS.map(e => (
+              <button key={e.label} type="button"
+                className={`chip event-chip event-chip-${e.type}`}
+                onClick={() => { update("from", e.from); update("to", e.to); setActivePeriod(""); }}>
+                {e.label}
+              </button>
+            ))}
+          </div>
           <div className="date-period-row">
             <div className="date-field">
               <span className="date-field-label">시작일</span>
