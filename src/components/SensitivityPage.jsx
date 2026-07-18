@@ -146,7 +146,7 @@ function BestSummary({ results }) {
   return (
     <div className="sens-best-card">
       <div className="sens-best-header">
-        <span className="sens-best-title">수익률 기준 최적 설정 vs 현재</span>
+        <span className="sens-best-title">수익률 기준 현재 vs 최적 설정</span>
       </div>
       <div className="sens-best-note">
         각 파라미터를 개별 비교한 결과. 수익률만으로 판단하지 말고 아래 표의 최대낙폭·사이클 수도 함께 확인하세요.<br />
@@ -154,10 +154,10 @@ function BestSummary({ results }) {
       </div>
       <div className="sens-best-grid-head">
         <span>항목</span>
-        <span>최적 설정</span>
-        <span>최적 수익률</span>
         <span>현재(기준)</span>
         <span>현재 수익률</span>
+        <span>최적 설정</span>
+        <span>최적 수익률</span>
         <span>차이</span>
       </div>
       <div className="sens-best-rows">
@@ -168,10 +168,10 @@ function BestSummary({ results }) {
           return (
             <div key={i} className="sens-best-row">
               <span className="sens-best-label">{row.label}</span>
-              <span className="sens-best-val">{row.bestLabel}</span>
-              <span className="sens-best-return" style={{ color: row.bestVal >= 0 ? "var(--green)" : "var(--red)" }}>{fmtReturn(row.bestVal)}</span>
               <span className="sens-best-val sens-muted">{row.currentLabel}</span>
               <span className="sens-best-return sens-muted">{fmtReturn(row.currentVal)}</span>
+              <span className="sens-best-val">{row.bestLabel}</span>
+              <span className="sens-best-return" style={{ color: row.bestVal >= 0 ? "var(--green)" : "var(--red)" }}>{fmtReturn(row.bestVal)}</span>
               <span className="sens-best-diff" style={{ color: isSame ? "var(--muted)" : isNoise ? "rgba(255,200,80,0.7)" : diff > 0 ? "var(--green)" : "var(--red)" }}>
                 {isSame ? "동일" : `${diff >= 0 ? "+" : ""}${diff.toFixed(1)}%p`}
                 {isNoise && <span className="sens-noise-tag">노이즈</span>}
