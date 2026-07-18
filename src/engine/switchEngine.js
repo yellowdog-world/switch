@@ -77,6 +77,7 @@ export function runBacktest(prices, investmentUSD, startFrom = null, maxPorang =
   let virtualBuyCount = 0; // 샀다치고 발생 횟수
   let extraBuyNeeded = 0;  // always_buy 모드에서 cash 부족으로 못 산 금액 누계
   let currentCycleNum = 1;
+  let cycleHadVirtualBuy = false; // 현재 사이클 내 샀다치고 발생 여부
 
   for (let i = startIdx; i < prices.length; i++) {
     const today = prices[i];
@@ -157,6 +158,7 @@ export function runBacktest(prices, investmentUSD, startFrom = null, maxPorang =
               lp = today.close;
               virtualBuy = true;
               virtualBuyCount += 1;
+              cycleHadVirtualBuy = true;
               action.push(`샀다치고 (cash 부족) @${today.close.toFixed(2)}`);
             }
           } else {
@@ -167,6 +169,7 @@ export function runBacktest(prices, investmentUSD, startFrom = null, maxPorang =
             }
             virtualBuy = true;
             virtualBuyCount += 1;
+            cycleHadVirtualBuy = true;
             action.push(`샀다치고 @${today.close.toFixed(2)}`);
           }
         }
@@ -253,10 +256,12 @@ export function runBacktest(prices, investmentUSD, startFrom = null, maxPorang =
           pnlPct,
           dong: true,
           dongBundles: dongBundles.length,
+          hadVirtualBuy: cycleHadVirtualBuy,
         });
         cycleStartCash = cash;
         cycleStartIdx = i + 1;
         currentCycleNum += 1;
+        cycleHadVirtualBuy = false;
       } else {
         // 깔끔 종료: 포트도 0, 랭크도 0 → lastUpdownPrice 초기화로 다음 사이클 새로 시작
         lastUpdownPrice = null;
@@ -268,10 +273,12 @@ export function runBacktest(prices, investmentUSD, startFrom = null, maxPorang =
           pnlPct,
           dong: false,
           dongBundles: 0,
+          hadVirtualBuy: cycleHadVirtualBuy,
         });
         cycleStartCash = cash;
         cycleStartIdx = i + 1;
         currentCycleNum += 1;
+        cycleHadVirtualBuy = false;
       }
     }
 

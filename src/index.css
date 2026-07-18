@@ -1178,3 +1178,56 @@ body {
   .sens-sweep-pair { grid-template-columns: 1fr; gap: 0; }
   .sens-sweep-row { grid-template-columns: 50px 1fr 60px 68px; }
 }
+
+/* ── 사이클 분석 페이지 ─────────────────────────────────────────────── */
+.cycle-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-bottom: 28px;
+}
+.cycle-stat-card {
+  background: var(--bg2);
+  border: 1px solid;
+  border-radius: 10px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.cycle-stat-type { font-size: 13px; font-weight: 700; }
+.cycle-stat-count { font-size: 22px; font-weight: 700; }
+.cycle-stat-row { display: flex; justify-content: space-between; align-items: center; font-size: 12px; }
+.cycle-stat-label { color: var(--muted); }
+.cycle-stat-val { font-weight: 600; }
+
+.cycle-dist-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-top: 28px;
+}
+.cycle-dist-col {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+}
+.cycle-dist-title { font-size: 12px; font-weight: 700; margin-bottom: 10px; }
+.cycle-dist-list { display: flex; flex-direction: column; gap: 6px; max-height: 320px; overflow-y: auto; }
+.cycle-dist-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 8px;
+  background: rgba(255,255,255,0.03);
+  border-radius: 5px;
+  gap: 8px;
+}
+.cycle-dist-date { font-size: 10px; color: var(--muted); line-height: 1.4; }
+.cycle-dist-return { font-size: 12px; font-weight: 700; white-space: nowrap; }
+
+@media (max-width: 700px) {
+  .cycle-stat-grid { grid-template-columns: 1fr; }
+  .cycle-dist-grid { grid-template-columns: 1fr; }
+}
