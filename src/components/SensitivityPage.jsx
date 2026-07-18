@@ -191,13 +191,13 @@ function BestSummary({ results }) {
           return (
             <div key={i} className="sens-best-row">
               <span className="sens-best-label">{row.label}</span>
-              <span className="sens-best-val sens-muted">{row.currentLabel}</span>
-              <span className="sens-best-return sens-muted">
+              <span className={`sens-best-val${isSame ? " sens-best-bold" : " sens-muted"}`}>{row.currentLabel}</span>
+              <span className={`sens-best-return${isSame ? "" : " sens-muted"}`}>
                 {fmtReturn(row.currentVal)}
                 {row.currentWR != null && <span className="sens-win-rate">승률 {row.currentWR}%</span>}
               </span>
-              <span className="sens-best-val">{row.bestLabel}</span>
-              <span className="sens-best-return" style={{ color: row.bestVal >= 0 ? "var(--green)" : "var(--red)" }}>
+              <span className={`sens-best-val${isSame ? " sens-muted" : " sens-best-bold"}`}>{row.bestLabel}</span>
+              <span className="sens-best-return" style={{ color: isSame ? "var(--muted)" : row.bestVal >= 0 ? "var(--green)" : "var(--red)" }}>
                 {fmtReturn(row.bestVal)}
                 {row.bestWR != null && <span className="sens-win-rate">{row.bestWR}%</span>}
               </span>

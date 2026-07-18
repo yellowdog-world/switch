@@ -990,6 +990,10 @@ body {
   color: rgba(255,255,255,0.45);
   font-weight: 400;
 }
+.sens-best-bold {
+  font-weight: 700;
+  color: var(--text);
+}
 .sens-best-return {
   font-size: 13px;
   font-weight: 600;
