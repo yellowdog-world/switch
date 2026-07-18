@@ -172,17 +172,17 @@ export default function DailyTable({ dailyLog, maxPorang = 15, symbol = "SOXL" }
                   ) : "-"}
                 </td>
                 {(() => {
-                  // 사이클 종료일: cycleEndPnlPct(이월 원가 기준)를 사용해 badge와 일치시킴
-                  // 그 외: totalValue 기준 사이클 수익률
+                  // 똥 사이클 종료일(port>0): 이월 주식은 다음 사이클 몫 → cash만 표시
+                  // 일반 사이클 종료일(port=0): totalValue = cash (다 팔렸으므로 동일)
+                  // 그 외 일중: totalValue (현금+주식평가금)
+                  const isDongEnd = d.cycleEndPnlPct !== null && d.port > 0;
                   const returnPct = d.cycleEndPnlPct !== null
                     ? d.cycleEndPnlPct
                     : (d.totalValue / d.cycleStartCash - 1) * 100;
-                  const displayValue = d.cycleEndPnlPct !== null
-                    ? Math.round(d.cycleStartCash * (1 + d.cycleEndPnlPct / 100))
-                    : d.totalValue;
+                  const displayValue = isDongEnd ? d.cash : d.totalValue;
                   return (
                     <>
-                      <td>${displayValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
+                      <td>${Math.round(displayValue).toLocaleString()}</td>
                       <td className={returnPct >= 0 ? "val-green" : "val-red"}>
                         {`${returnPct >= 0 ? "+" : ""}${returnPct.toFixed(2)}%`}
                       </td>
