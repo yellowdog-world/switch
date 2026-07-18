@@ -288,7 +288,10 @@ const METRICS_BASE = [
 function CompareTable({ title, guide, rows, showVirtual = false }) {
   const baseline = rows[0]?.summary;
   const metrics = showVirtual
-    ? [...METRICS_BASE, { key: "virtualBuyCount", label: "샀다치고", format: v => `${v}회`, better: "lower" }]
+    ? [...METRICS_BASE,
+        { key: "virtualBuyCount", label: "샀다치고", format: v => `${v}회`, better: "lower" },
+        { key: "extraBuyNeeded", label: "추가 필요 투자금", format: v => v > 0 ? `+$${Math.round(v).toLocaleString()}` : "-", better: "lower" },
+      ]
     : METRICS_BASE;
 
   function getCellStyle(key, value, baseValue, better) {
@@ -557,7 +560,7 @@ export default function SensitivityPage() {
 
           <CompareTable
             title="샀다치고 변형"
-            guide="포랭 만석(15/15) 상태에서 매수 조건이 또 충족될 때의 동작. ▸ 현재(LP 갱신): 실제 매수 없이 LP를 오늘 종가로 낮춤 → 조금만 반등해도 매도 발동, 사이클 빠르게 회전. ▸ 비활성화(LP 고정): LP를 바꾸지 않음 → 이전 실제 매수가까지 회복해야만 매도 발동, 더 오래 보유."
+            guide="포랭 만석 상태에서 매수 조건이 또 충족될 때의 동작. ▸ 현재(LP 갱신): 실제 매수 없이 LP를 오늘 종가로 낮춤 → 조금만 반등해도 매도 발동, 사이클 빠르게 회전. ▸ 비활성화(LP 고정): LP를 바꾸지 않음 → 이전 실제 매수가까지 회복해야만 매도 발동, 더 오래 보유. ▸ 포랭 초과 시 실제 매수: 한도 무시하고 계속 매수 — 현금 소진 후엔 LP 갱신으로 전환. 추가 필요 투자금을 확인하세요."
             rows={results.virtualBuyCompare}
             showVirtual
           />

@@ -75,6 +75,7 @@ export function runBacktest(prices, investmentUSD, startFrom = null, maxPorang =
   let cycleStartCash = cash; // 각 사이클 시작 시점의 현금. 사이클 수익률 계산 기준
   let dongCount = 0;
   let virtualBuyCount = 0; // 샀다치고 발생 횟수
+  let extraBuyNeeded = 0;  // always_buy 모드에서 cash 부족으로 못 산 금액 누계
   let currentCycleNum = 1;
 
   for (let i = startIdx; i < prices.length; i++) {
@@ -149,6 +150,8 @@ export function runBacktest(prices, investmentUSD, startFrom = null, maxPorang =
               updownBuy = true;
               action.push(`업다운 매수 (${porang + 1}차·초과) @${today.close.toFixed(2)}(${shares}주)`);
             } else {
+              // cash 부족 - 살 수 있었을 금액을 누적
+              extraBuyNeeded += Math.floor(getUnitAmount(porang) / today.close) * today.close;
               lastUpdownPrice = today.close;
               lp = today.close;
               virtualBuy = true;
@@ -322,6 +325,7 @@ export function runBacktest(prices, investmentUSD, startFrom = null, maxPorang =
       totalCycles: cycles.length,
       dongCount,
       virtualBuyCount,
+      extraBuyNeeded: parseFloat(extraBuyNeeded.toFixed(0)),
       maxDrawdown: parseFloat(maxDrawdown.toFixed(2)),
       currentCycleReturn,
     },

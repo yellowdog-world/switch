@@ -757,9 +757,36 @@ body {
   letter-spacing: 0.02em;
 }
 @media (max-width: 700px) {
-  .rolling-form-row { flex-direction: column; align-items: stretch; }
-  .rolling-form-field { width: 100%; }
-  .rolling-form-field .input { width: 100% !important; }
+  .rolling-form { padding: 12px 14px; }
+  /* 기간 칩: 4열 그리드로 2줄에 정리 */
+  .rolling-form-periods {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 5px;
+    margin-bottom: 12px;
+  }
+  .rolling-form-periods .chip {
+    padding: 5px 4px;
+    font-size: 11px;
+    text-align: center;
+    width: 100%;
+  }
+  /* 폼 필드: 2열 그리드 */
+  .rolling-form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    align-items: end;
+  }
+  /* 종목은 1열 전체 */
+  .rolling-form-row > .rolling-form-field:first-child { grid-column: 1 / -1; }
+  /* 실행 버튼은 1열 전체 */
+  .rolling-form-row > .run-btn { grid-column: 1 / -1; width: 100%; }
+  .rolling-form-field { width: auto; }
+  .rolling-form-field .input,
+  .rolling-form-field .input-compact { width: 100% !important; box-sizing: border-box; }
+  .rolling-form-field .input-prefix-wrap { display: flex; }
+  .rolling-form-field .input-prefix-wrap .input-prefixed { flex: 1; width: auto !important; }
 }
 
 /* ── Column Tooltip ── */
