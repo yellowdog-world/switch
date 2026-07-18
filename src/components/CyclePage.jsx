@@ -38,9 +38,57 @@ function daysBetween(a, b) {
   return Math.round((new Date(b) - new Date(a)) / 86400000);
 }
 
-function classifyCycle(c) {
-  if (c.dong) return "똥";
-  if (c.hadVirtualBuy) return "샀다치고";
+// 똥 사이클을 후속 사이클과 합산해 에피소드로 병합
+function mergeEpisodes(cycles) {
+  const episodes = [];
+  let i = 0;
+  while (i < cycles.length) {
+    const c = cycles[i];
+    if (!c.dong) {
+      episodes.push({ ...c, cycleNums: [c.cycleNum], dongCount: 0 });
+      i++;
+    } else {
+      // 똥 체인 수집
+      let ep = {
+        cycleNums: [c.cycleNum],
+        startDate: c.startDate,
+        startCash: c.startCash,
+        pnl: c.pnl,
+        dong: true,
+        dongCount: 1,
+        hadVirtualBuy: c.hadVirtualBuy,
+      };
+      i++;
+      // 연속 똥도 합산
+      while (i < cycles.length && cycles[i].dong) {
+        const nx = cycles[i];
+        ep.cycleNums.push(nx.cycleNum);
+        ep.pnl += nx.pnl;
+        ep.dongCount++;
+        ep.hadVirtualBuy = ep.hadVirtualBuy || nx.hadVirtualBuy;
+        i++;
+      }
+      // 똥을 해소한 후속 사이클 흡수
+      if (i < cycles.length) {
+        const last = cycles[i];
+        ep.cycleNums.push(last.cycleNum);
+        ep.endDate = last.endDate;
+        ep.pnl += last.pnl;
+        ep.hadVirtualBuy = ep.hadVirtualBuy || last.hadVirtualBuy;
+        i++;
+      } else {
+        ep.endDate = cycles[i - 1].endDate;
+      }
+      ep.pnlPct = (ep.pnl / ep.startCash) * 100;
+      episodes.push(ep);
+    }
+  }
+  return episodes;
+}
+
+function classifyEpisode(ep) {
+  if (ep.dong) return "똥";
+  if (ep.hadVirtualBuy) return "샀다치고";
   return "정상";
 }
 
@@ -126,17 +174,20 @@ function CycleModal({ cycle, dailyLog, type, onClose }) {
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
-  const logs = dailyLog.filter(d => d.cycleNum === cycle.cycleNum);
+  const logs = dailyLog.filter(d => cycle.cycleNums.includes(d.cycleNum));
   const color = TYPE_COLOR[type];
+  const label = cycle.cycleNums.length === 1
+    ? `사이클 #${cycle.cycleNums[0]}`
+    : `사이클 #${cycle.cycleNums[0]}–#${cycle.cycleNums[cycle.cycleNums.length - 1]}`;
 
   return (
     <div className="cycle-modal-backdrop" onClick={onClose}>
       <div className="cycle-modal" onClick={e => e.stopPropagation()}>
         <div className="cycle-modal-header">
           <div>
-            <span className="cycle-modal-title">사이클 #{cycle.cycleNum}</span>
+            <span className="cycle-modal-title">{label}</span>
             <span className="cycle-modal-badge" style={{ background: color + "22", color }}>
-              {type}
+              {type}{cycle.dongCount > 0 ? ` (똥 ${cycle.dongCount}회)` : ""}
             </span>
           </div>
           <div className="cycle-modal-meta">
@@ -217,7 +268,7 @@ export default function CyclePage() {
       const inv = Number(investment) || DEFAULT_USD;
       const p = Math.max(1, Math.min(30, Number(porang) || 15));
       const result = runBacktest(data.prices, inv, from, p);
-      setCycles(result.cycles);
+      setCycles(mergeEpisodes(result.cycles));
       setDailyLog(result.dailyLog);
     } catch (e) {
       setError(e.message);
@@ -228,7 +279,7 @@ export default function CyclePage() {
 
   const grouped = cycles
     ? TYPE_ORDER.reduce((acc, t) => {
-        acc[t] = cycles.filter(c => classifyCycle(c) === t);
+        acc[t] = cycles.filter(ep => classifyEpisode(ep) === t);
         return acc;
       }, {})
     : null;
@@ -237,9 +288,9 @@ export default function CyclePage() {
     ? TYPE_ORDER.map(t => ({
         type: t,
         color: TYPE_COLOR[t],
-        points: (grouped[t] || []).map(c => ({
-          ...c,
-          days: daysBetween(c.startDate, c.endDate),
+        points: (grouped[t] || []).map(ep => ({
+          ...ep,
+          days: daysBetween(ep.startDate, ep.endDate),
           type: t,
         })),
       }))
@@ -336,12 +387,15 @@ export default function CyclePage() {
                 <div key={t} className="cycle-dist-col">
                   <div className="cycle-dist-title" style={{ color: TYPE_COLOR[t] }}>{t} ({items.length})</div>
                   <div className="cycle-dist-list">
-                    {sorted.map(c => (
-                      <div key={c.cycleNum} className="cycle-dist-row cycle-dist-row-clickable"
-                        onClick={() => setSelected({ cycle: c, type: t })}>
-                        <span className="cycle-dist-date">{c.startDate.slice(2)} ~<br />{c.endDate.slice(2)}</span>
-                        <span className="cycle-dist-return" style={{ color: c.pnlPct >= 0 ? "var(--green)" : "var(--red)" }}>
-                          {c.pnlPct >= 0 ? "+" : ""}{c.pnlPct.toFixed(2)}%
+                    {sorted.map(ep => (
+                      <div key={ep.cycleNums[0]} className="cycle-dist-row cycle-dist-row-clickable"
+                        onClick={() => setSelected({ cycle: ep, type: t })}>
+                        <span className="cycle-dist-date">
+                          {ep.startDate.slice(2)} ~<br />{ep.endDate.slice(2)}
+                          {ep.dongCount > 0 && <span style={{ color: "#f87171", fontSize: 10 }}> 똥{ep.dongCount}회</span>}
+                        </span>
+                        <span className="cycle-dist-return" style={{ color: ep.pnlPct >= 0 ? "var(--green)" : "var(--red)" }}>
+                          {ep.pnlPct >= 0 ? "+" : ""}{ep.pnlPct.toFixed(2)}%
                         </span>
                       </div>
                     ))}
