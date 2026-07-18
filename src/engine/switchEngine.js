@@ -23,15 +23,34 @@
 
 export function runBacktest(prices, investmentUSD, startFrom = null, maxPorang = 15, buyRate = 0.002, opts = {}) {
   const {
-    virtualBuyMode = 'update_lp', // 'update_lp' | 'keep_lp'
-    updownSellBuffer = 0,          // 매도 시 LP 위로 얼마나 더 올라야 (0.005 = +0.5%)
-    tteobSellBuffer = 0,           // 떨법 매도 시 매수가 위로 얼마나 더 올라야
-    tteobOrderPct = null,          // null → 전일종가-$0.01, 숫자 → 전일종가×(1-pct)
-    firstDayGapFilter = 1.10,      // 첫날 급등 제외 기준 (1.10 = 전일比 +10% 초과 시 스킵)
+    virtualBuyMode = 'update_lp', // 'update_lp' | 'keep_lp' | 'always_buy'
+    updownSellBuffer = 0,
+    tteobSellBuffer = 0,
+    tteobOrderPct = null,
+    firstDayGapFilter = 1.10,
+    splitWeightMode = 'equal',    // 'equal' | 'linear_up'(역피라미드) | 'linear_down'(피라미드)
   } = opts;
 
   const MAX_PORANG = maxPorang;
-  const unitAmount = investmentUSD / MAX_PORANG; // 1회 매수금액
+
+  // 차수별 매수금액 배열 (splitWeightMode에 따라 비중 조정)
+  const splitAmounts = (() => {
+    if (splitWeightMode === 'linear_up') {
+      // 역피라미드: 후반 차수일수록 더 많이 (1, 2, 3, ..., n)
+      const w = Array.from({ length: MAX_PORANG }, (_, i) => i + 1);
+      const total = w.reduce((s, v) => s + v, 0);
+      return w.map(v => (investmentUSD * v) / total);
+    }
+    if (splitWeightMode === 'linear_down') {
+      // 피라미드: 초반 차수일수록 더 많이 (n, n-1, ..., 1)
+      const w = Array.from({ length: MAX_PORANG }, (_, i) => MAX_PORANG - i);
+      const total = w.reduce((s, v) => s + v, 0);
+      return w.map(v => (investmentUSD * v) / total);
+    }
+    return Array(MAX_PORANG).fill(investmentUSD / MAX_PORANG);
+  })();
+  // splitAmounts 범위 초과 시 마지막 값 사용 (always_buy 모드에서 포랭 무제한 시)
+  const getUnitAmount = (splitIdx) => splitAmounts[Math.min(splitIdx, MAX_PORANG - 1)];
 
   // ── 상태 변수 ────────────────────────────────────────────────────────
   let port = 0;
@@ -88,7 +107,7 @@ export function runBacktest(prices, investmentUSD, startFrom = null, maxPorang =
       if (lastUpdownPrice === null) {
         // 최초 진입: 급등일(어제 대비 +10% 초과) 제외하고 포랭 여유 있으면 매수
         if (porang < MAX_PORANG && today.close <= yesterday.close * firstDayGapFilter) {
-          const shares = Math.floor(unitAmount / today.close);
+          const shares = Math.floor(getUnitAmount(porang) / today.close);
           const spent = shares * today.close;
           totalShares += shares;
           totalUpdownCost += spent;
@@ -106,7 +125,7 @@ export function runBacktest(prices, investmentUSD, startFrom = null, maxPorang =
         if (today.close <= threshold) {
           if (porang < MAX_PORANG) {
             // 실제 매수
-            const shares = Math.floor(unitAmount / today.close);
+            const shares = Math.floor(getUnitAmount(porang) / today.close);
             const spent = shares * today.close;
             totalShares += shares;
             totalUpdownCost += spent;
@@ -116,10 +135,28 @@ export function runBacktest(prices, investmentUSD, startFrom = null, maxPorang =
             port += 1;
             updownBuy = true;
             action.push(`업다운 매수 (${porang + 1}차) @${today.close.toFixed(2)}(${shares}주)`);
+          } else if (virtualBuyMode === 'always_buy') {
+            // 포랭 한도 무시하고 계속 실제 매수 (cash 여유 있을 때만)
+            const shares = Math.floor(getUnitAmount(porang) / today.close);
+            const spent = shares * today.close;
+            if (shares > 0 && cash >= spent) {
+              totalShares += shares;
+              totalUpdownCost += spent;
+              cash -= spent;
+              lastUpdownPrice = today.close;
+              lp = today.close;
+              port += 1;
+              updownBuy = true;
+              action.push(`업다운 매수 (${porang + 1}차·초과) @${today.close.toFixed(2)}(${shares}주)`);
+            } else {
+              lastUpdownPrice = today.close;
+              lp = today.close;
+              virtualBuy = true;
+              virtualBuyCount += 1;
+              action.push(`샀다치고 (cash 부족) @${today.close.toFixed(2)}`);
+            }
           } else {
-            // 샀다치고: 포랭이 꽉 찼을 때 매수 조건이 충족되면
-            // 실제로 사지는 않고 LP만 오늘 종가로 낮춰서
-            // 이후 반등 시 이 가격 기준으로 매도가 발동되게 함
+            // 샀다치고
             if (virtualBuyMode === 'update_lp') {
               lastUpdownPrice = today.close;
               lp = today.close;
@@ -156,7 +193,7 @@ export function runBacktest(prices, investmentUSD, startFrom = null, maxPorang =
     if (yesterday && today.close < yesterday.close && newPorang < MAX_PORANG) {
       const orderPrice = tteobOrderPct != null ? yesterday.close * (1 - tteobOrderPct) : yesterday.close - 0.01;
       if (today.close <= orderPrice) {
-        const shares = Math.floor(unitAmount / today.close);
+        const shares = Math.floor(getUnitAmount(newPorang) / today.close);
         const spent = shares * today.close;
         rankBundles.push({ buyPrice: today.close, shares, amount: spent });
         cash -= spent;

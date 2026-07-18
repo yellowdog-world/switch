@@ -137,7 +137,7 @@ function BestSummary({ results }) {
   const baseReturn = results.virtualBuyCompare[0].summary.totalReturn;
   const findBest = (arr) => arr.reduce((b, r) => r.summary.totalReturn > b.summary.totalReturn ? r : b);
   const rr = results.rollingRates;
-  const rrKeys = ["matrix","virtualBuy","updownSell","tteobSell","tteobBuy","firstDay"];
+  const rrKeys = ["matrix","virtualBuy","updownSell","tteobSell","tteobBuy","firstDay","splitWeight"];
 
   const rows = [
     {
@@ -149,8 +149,8 @@ function BestSummary({ results }) {
       currentWR: rr?.matrix?.current,
       bestWR: rr?.matrix?.best,
     },
-    ...["virtualBuyCompare","updownSellCompare","tteobSellCompare","tteobBuyCompare","firstDayCompare"].map((key, i) => {
-      const labels = ["샀다치고 변형","업다운 매도 조건","떨법 매도 조건","떨법 매수 지정가","첫날 급등 필터"];
+    ...["virtualBuyCompare","updownSellCompare","tteobSellCompare","tteobBuyCompare","firstDayCompare","splitWeightCompare"].map((key, i) => {
+      const labels = ["샀다치고 변형","업다운 매도 조건","떨법 매도 조건","떨법 매수 지정가","첫날 급등 필터","분할 금액 구조"];
       const grp = results[key];
       const best = findBest(grp);
       const rrKey = rrKeys[i + 1];
@@ -346,6 +346,7 @@ export default function SensitivityPage() {
       const virtualBuyCompare = [
         runItem("현재 (LP 갱신)", { virtualBuyMode: "update_lp" }),
         runItem("비활성화 (LP 고정)", { virtualBuyMode: "keep_lp" }),
+        runItem("포랭 초과 시 실제 매수", { virtualBuyMode: "always_buy" }),
       ];
 
       const updownSellCompare = [
@@ -371,6 +372,12 @@ export default function SensitivityPage() {
         runItem("+5% 초과 제외 (엄격)", { firstDayGapFilter: 1.05 }),
         runItem("+15% 초과 제외 (관대)", { firstDayGapFilter: 1.15 }),
         runItem("+20% 초과 제외", { firstDayGapFilter: 1.20 }),
+      ];
+
+      const splitWeightCompare = [
+        runItem("균등 분할 (현재)", { splitWeightMode: "equal" }),
+        runItem("역피라미드 (저점 집중)", { splitWeightMode: "linear_up" }),
+        runItem("피라미드 (초반 집중)", { splitWeightMode: "linear_down" }),
       ];
 
       // 1D 스윕: 분할수만 변경 (baseBuyRate 고정)
@@ -399,15 +406,16 @@ export default function SensitivityPage() {
       }));
 
       const rollingRates = {
-        matrix:    { current: wr(basePorang, baseBuyRate, {}),     best: wr(bestMatrixP, bestMatrixBr, {}) },
-        virtualBuy:{ current: wr(basePorang, baseBuyRate, virtualBuyCompare[0].opts),  best: wr(basePorang, baseBuyRate, findBestItem(virtualBuyCompare).opts) },
-        updownSell:{ current: wr(basePorang, baseBuyRate, updownSellCompare[0].opts),  best: wr(basePorang, baseBuyRate, findBestItem(updownSellCompare).opts) },
-        tteobSell: { current: wr(basePorang, baseBuyRate, tteobSellCompare[0].opts),   best: wr(basePorang, baseBuyRate, findBestItem(tteobSellCompare).opts) },
-        tteobBuy:  { current: wr(basePorang, baseBuyRate, tteobBuyCompare[0].opts),    best: wr(basePorang, baseBuyRate, findBestItem(tteobBuyCompare).opts) },
-        firstDay:  { current: wr(basePorang, baseBuyRate, firstDayCompare[0].opts),    best: wr(basePorang, baseBuyRate, findBestItem(firstDayCompare).opts) },
+        matrix:      { current: wr(basePorang, baseBuyRate, {}),     best: wr(bestMatrixP, bestMatrixBr, {}) },
+        virtualBuy:  { current: wr(basePorang, baseBuyRate, virtualBuyCompare[0].opts),   best: wr(basePorang, baseBuyRate, findBestItem(virtualBuyCompare).opts) },
+        updownSell:  { current: wr(basePorang, baseBuyRate, updownSellCompare[0].opts),   best: wr(basePorang, baseBuyRate, findBestItem(updownSellCompare).opts) },
+        tteobSell:   { current: wr(basePorang, baseBuyRate, tteobSellCompare[0].opts),    best: wr(basePorang, baseBuyRate, findBestItem(tteobSellCompare).opts) },
+        tteobBuy:    { current: wr(basePorang, baseBuyRate, tteobBuyCompare[0].opts),     best: wr(basePorang, baseBuyRate, findBestItem(tteobBuyCompare).opts) },
+        firstDay:    { current: wr(basePorang, baseBuyRate, firstDayCompare[0].opts),     best: wr(basePorang, baseBuyRate, findBestItem(firstDayCompare).opts) },
+        splitWeight: { current: wr(basePorang, baseBuyRate, splitWeightCompare[0].opts),  best: wr(basePorang, baseBuyRate, findBestItem(splitWeightCompare).opts) },
       };
 
-      setResults({ matrix, porangSweep, buyRateSweep, virtualBuyCompare, updownSellCompare, tteobSellCompare, tteobBuyCompare, firstDayCompare, basePorang, baseBuyRate, rollingRates });
+      setResults({ matrix, porangSweep, buyRateSweep, virtualBuyCompare, updownSellCompare, tteobSellCompare, tteobBuyCompare, firstDayCompare, splitWeightCompare, basePorang, baseBuyRate, rollingRates });
     } catch (e) {
       setError(e.message);
     } finally {
@@ -535,6 +543,11 @@ export default function SensitivityPage() {
             title="첫날 급등 필터"
             guide="전일 대비 이 비율 이상 오른 날엔 업다운 첫 진입을 건너뜁니다. 기준을 낮추면 고점 진입을 더 많이 피하지만, 상승 추세 시작일도 놓칠 수 있습니다."
             rows={results.firstDayCompare}
+          />
+          <CompareTable
+            title="분할 금액 구조"
+            guide="차수별 매수 금액 비중을 바꿉니다. 역피라미드는 나중 차수(저점)에 더 많이 투입하고, 피라미드는 초반 차수에 더 많이 투입합니다. 총 투자금은 동일합니다."
+            rows={results.splitWeightCompare}
           />
         </>
       )}
