@@ -107,6 +107,62 @@ function MatrixTable({ matrix, basePorang, baseBuyRate }) {
   );
 }
 
+function BestSummary({ results }) {
+  // 매트릭스에서 최고 수익 조합 찾기
+  let best = { totalReturn: -Infinity, porang: null, buyRate: null };
+  PORANG_SWEEP.forEach((p, pi) => {
+    BUYRATE_SWEEP.forEach((br, bi) => {
+      const s = results.matrix[pi][bi];
+      if (s.totalReturn > best.totalReturn) best = { totalReturn: s.totalReturn, porang: p, buyRate: br };
+    });
+  });
+
+  const findBest = (rows) => rows.reduce((b, r) => r.summary.totalReturn > b.summary.totalReturn ? r : b);
+
+  const rows = [
+    {
+      label: "분할수 × 매수배율",
+      best: `${best.porang}분할 / ${(best.buyRate * 100).toFixed(1)}%`,
+      current: `${results.basePorang}분할 / ${(results.baseBuyRate * 100).toFixed(1)}%`,
+      value: best.totalReturn,
+    },
+    { label: "샀다치고 변형", ...bestRow(findBest(results.virtualBuyCompare), results.virtualBuyCompare[0]) },
+    { label: "업다운 매도 조건", ...bestRow(findBest(results.updownSellCompare), results.updownSellCompare[0]) },
+    { label: "떨법 매도 조건", ...bestRow(findBest(results.tteobSellCompare), results.tteobSellCompare[0]) },
+    { label: "떨법 매수 지정가", ...bestRow(findBest(results.tteobBuyCompare), results.tteobBuyCompare[0]) },
+    { label: "첫날 급등 필터", ...bestRow(findBest(results.firstDayCompare), results.firstDayCompare[0]) },
+  ];
+
+  return (
+    <div className="sens-best-card">
+      <div className="sens-best-header">
+        <span className="sens-best-title">수익률 기준 최적 설정</span>
+        <span className="sens-best-note">각 파라미터를 개별적으로 비교한 결과. 수익률만으로 판단하지 말고 아래 표의 최대낙폭·사이클 수도 함께 확인하세요.</span>
+      </div>
+      <div className="sens-best-rows">
+        {rows.map((row, i) => (
+          <div key={i} className="sens-best-row">
+            <span className="sens-best-label">{row.label}</span>
+            <span className="sens-best-val">{row.best}</span>
+            {row.isCurrent && <span className="sens-best-same">현재와 동일</span>}
+            <span className="sens-best-return" style={{ color: row.value >= 0 ? "var(--green)" : "var(--red)" }}>
+              {fmtReturn(row.value)}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function bestRow(bestItem, baseItem) {
+  return {
+    best: bestItem.label.replace(/\s*\(현재\)/, "").replace(/\s*\(기준\)/, ""),
+    isCurrent: bestItem === baseItem,
+    value: bestItem.summary.totalReturn,
+  };
+}
+
 const METRICS_BASE = [
   { key: "totalReturn", label: "총수익률", format: v => fmtReturn(v), better: "higher" },
   { key: "maxDrawdown", label: "최대낙폭", format: v => `-${Math.abs(v).toFixed(1)}%`, better: "lower" },
@@ -312,6 +368,8 @@ export default function SensitivityPage() {
 
       {results && (
         <>
+          <BestSummary results={results} />
+
           <div className="sens-section">
             <div className="sens-section-title">분할수 × 매수배율 수익률 매트릭스</div>
             <div className="sens-guide">
