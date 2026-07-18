@@ -107,7 +107,7 @@ export default function App() {
             <nav className="main-nav">
               <button className={`nav-btn ${mode === "backtest" ? "nav-active" : ""}`} onClick={() => setMode("backtest")}>백테스트</button>
               <button className={`nav-btn ${mode === "rolling" ? "nav-active" : ""}`} onClick={() => setMode("rolling")}>롤링 분석</button>
-              <button className={`nav-btn ${mode === "sensitivity" ? "nav-active" : ""}`} onClick={() => setMode("sensitivity")}>변수민감도</button>
+              <button className={`nav-btn ${mode === "sensitivity" ? "nav-active" : ""}`} onClick={() => setMode("sensitivity")}>민감도 분석</button>
               <button className={`nav-btn ${mode === "scan" ? "nav-active" : ""}`} onClick={() => setMode("scan")}>종목 스캔</button>
             </nav>
           </div>

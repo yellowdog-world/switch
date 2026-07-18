@@ -366,7 +366,7 @@ export default function SensitivityPage() {
   return (
     <section className="sensitivity-page">
       <div className="section-title">
-        변수 민감도
+        민감도 분석
         <span className="section-sub">파라미터 변형에 따른 수익률 변화 비교</span>
       </div>
 
