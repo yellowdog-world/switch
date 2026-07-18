@@ -155,6 +155,34 @@ function BestSummary({ results }) {
   );
 }
 
+// 1D 스윕 바 차트
+function SweepChart({ items }) {
+  const values = items.map(it => it.summary.totalReturn);
+  const maxAbs = Math.max(...values.map(Math.abs), 0.01);
+  return (
+    <div className="sens-sweep-chart">
+      {items.map((item, i) => {
+        const v = values[i];
+        const pct = Math.abs(v) / maxAbs * 100;
+        const color = v >= 0 ? "var(--green)" : "var(--red)";
+        return (
+          <div key={i} className={`sens-sweep-row${item.isCurrent ? " sens-sweep-current" : ""}`}>
+            <span className="sens-sweep-label">
+              {item.isCurrent && <span className="sens-star">★ </span>}
+              {item.label}
+            </span>
+            <div className="sens-sweep-bar-wrap">
+              <div className="sens-sweep-bar" style={{ width: `${pct.toFixed(1)}%`, background: color }} />
+            </div>
+            <span className="sens-sweep-value" style={{ color }}>{fmtReturn(v)}</span>
+            <span className="sens-sweep-dd">낙폭 -{item.summary.maxDrawdown.toFixed(1)}%</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function bestRow(bestItem, baseItem) {
   return {
     best: bestItem.label.replace(/\s*\(현재\)/, "").replace(/\s*\(기준\)/, ""),
@@ -292,7 +320,21 @@ export default function SensitivityPage() {
         { label: "+20% 초과 제외", summary: run({ firstDayGapFilter: 1.20 }) },
       ];
 
-      setResults({ matrix, virtualBuyCompare, updownSellCompare, tteobSellCompare, tteobBuyCompare, firstDayCompare, basePorang, baseBuyRate });
+      // 1D 스윕: 분할수만 변경 (baseBuyRate 고정)
+      const porangSweep = PORANG_SWEEP.map(p => ({
+        label: `${p}분할`,
+        isCurrent: p === basePorang,
+        summary: runBacktest(priceData, inv, from, p, baseBuyRate).summary,
+      }));
+
+      // 1D 스윕: 매수배율만 변경 (basePorang 고정)
+      const buyRateSweep = BUYRATE_SWEEP.map(br => ({
+        label: `${(br * 100).toFixed(1)}%`,
+        isCurrent: Math.abs(br - baseBuyRate) < 0.00005,
+        summary: runBacktest(priceData, inv, from, basePorang, br).summary,
+      }));
+
+      setResults({ matrix, porangSweep, buyRateSweep, virtualBuyCompare, updownSellCompare, tteobSellCompare, tteobBuyCompare, firstDayCompare, basePorang, baseBuyRate });
     } catch (e) {
       setError(e.message);
     } finally {
@@ -369,6 +411,23 @@ export default function SensitivityPage() {
       {results && (
         <>
           <BestSummary results={results} />
+
+          <div className="sens-section sens-sweep-pair">
+            <div className="sens-sweep-half">
+              <div className="sens-section-title">분할수 비교
+                <span className="sens-section-fixed">매수배율 {(results.baseBuyRate * 100).toFixed(2)}% 고정</span>
+              </div>
+              <div className="sens-guide">★ = 기준값. 같은 기간·같은 매수배율에서 분할수만 바꾼 결과입니다. 수익률 차이가 수십 %p 미만이면 단일 백테스트 노이즈 범위일 수 있으니 낙폭도 함께 확인하세요.</div>
+              <SweepChart items={results.porangSweep} />
+            </div>
+            <div className="sens-sweep-half">
+              <div className="sens-section-title">매수배율 비교
+                <span className="sens-section-fixed">{results.basePorang}분할 고정</span>
+              </div>
+              <div className="sens-guide">★ = 기준값. threshold = LP × (1 − 매수배율 × 포랭). 배율이 높을수록 더 많이 내려야 추가 매수가 발생합니다.</div>
+              <SweepChart items={results.buyRateSweep} />
+            </div>
+          </div>
 
           <div className="sens-section">
             <div className="sens-section-title">분할수 × 매수배율 수익률 매트릭스</div>
