@@ -41,7 +41,6 @@ function DogLogo() {
 }
 
 export default function App() {
-  const [showGuide, setShowGuide] = useState(false);
   const [mode, setMode] = useState(() => {
     const p = new URLSearchParams(window.location.search);
     if (p.get("mode") === "rolling") return "rolling";
@@ -98,11 +97,10 @@ export default function App() {
 
   return (
     <div className="app">
-      {showGuide && <GuidePage onClose={() => setShowGuide(false)} />}
       <header className="header" ref={headerRef}>
         <div className="header-inner">
           <div className="header-top">
-            <div className="logo" onClick={() => setShowGuide(true)} title="전략 가이드" style={{ cursor: "pointer" }}>
+            <div className="logo" onClick={() => setMode("guide")} title="전략 가이드" style={{ cursor: "pointer" }}>
               <div className="logo-icon"><DogLogo /></div>
               <div className="logo-text">
                 <div className="logo-title">황구</div>
@@ -121,6 +119,7 @@ export default function App() {
       </header>
 
       <main className="main">
+        {mode === "guide" && <GuidePage onBack={() => setMode("backtest")} />}
         {mode === "scan" && <ScanPage />}
         {mode === "cycle" && <CyclePage />}
         {mode === "rolling" && <RollingPage prices={rawPrices} params={params} onGoBacktest={() => setMode("backtest")} />}

@@ -1,10 +1,10 @@
-export default function GuidePage({ onClose }) {
+export default function GuidePage({ onBack }) {
   return (
-    <div className="guide-overlay" onClick={onClose}>
-      <div className="guide-panel" onClick={e => e.stopPropagation()}>
-        <button className="guide-close" onClick={onClose}>✕</button>
+    <div className="guide-page">
+      <div className="guide-page-inner">
 
         <div className="guide-header">
+          <button className="guide-back-btn" onClick={onBack}>← 돌아가기</button>
           <div className="guide-logo">🐕</div>
           <h1 className="guide-title">이 전략이란?</h1>
           <p className="guide-subtitle">
@@ -75,38 +75,84 @@ export default function GuidePage({ onClose }) {
           </div>
         </section>
 
-        {/* 예시 시뮬레이션 */}
+        {/* 실전 예시 — 업다운 */}
         <section className="guide-section">
-          <h2 className="guide-section-title">🔢 실전 예시 (투자금 $15,000 / 15분할)</h2>
-          <p className="guide-section-desc">1분할 = $1,000 / 매수 단위</p>
+          <h2 className="guide-section-title">🔢 실전 예시 — 업다운 (투자금 $15,000 / 15분할)</h2>
+          <p className="guide-section-desc">1분할 = $1,000 / 포랭이 올라갈수록 매수 기준(하락폭)이 커집니다.</p>
           <div className="guide-example-table">
             <div className="ex-row ex-header">
-              <span>날짜</span><span>종가</span><span>LP</span><span>포트</span><span>행동</span><span>현금</span>
+              <span>날짜</span><span>종가</span><span>LP</span><span>포랭</span><span>행동</span><span>현금</span>
             </div>
             <div className="ex-row">
               <span>Day 1</span><span>$10.00</span><span>$10.00</span><span className="val-blue">1</span>
-              <span className="action-buy">첫날 매수 100주</span><span>$14,000</span>
+              <span className="action-buy">첫날 매수 100주 @$10</span><span>$14,000</span>
             </div>
             <div className="ex-row">
               <span>Day 2</span><span>$10.20</span><span>$10.00</span><span className="val-green">0</span>
-              <span className="action-sell">매도 → +$20</span><span>$15,020</span>
+              <span className="action-sell">매도 → +$20 수익</span><span>$15,020</span>
             </div>
             <div className="ex-row">
               <span>Day 3</span><span>$9.98</span><span>$10.20</span><span className="val-blue">1</span>
-              <span className="action-buy">매수 100주</span><span>$14,022</span>
+              <span className="action-buy">재매수 100주 @$9.98</span><span>$14,022</span>
             </div>
             <div className="ex-row">
-              <span>Day 4</span><span>$9.80</span><span>$9.98</span><span className="val-blue">2</span>
-              <span className="action-buy">2차 매수 102주</span><span>$13,022</span>
+              <span>Day 4</span><span>$9.78</span><span>$9.98</span><span className="val-blue">2</span>
+              <span className="action-buy">2차 매수 102주 @$9.78 <span className="ex-note">(포랭1 → 하락 0.2% 이상 필요)</span></span><span>$13,025</span>
+            </div>
+            <div className="ex-row">
+              <span>Day 5</span><span>$9.58</span><span>$9.78</span><span className="val-blue">3</span>
+              <span className="action-buy">3차 매수 104주 @$9.58 <span className="ex-note">(포랭2 → 하락 0.4% 이상)</span></span><span>$12,027</span>
             </div>
             <div className="ex-row ex-highlight">
-              <span>Day 5</span><span>$10.05</span><span>$9.80</span><span className="val-blue">1</span>
-              <span className="action-sell">매도 1개 → +$...</span><span>$14,034</span>
+              <span>Day 6</span><span>$9.80</span><span>$9.58</span><span className="val-blue">2</span>
+              <span className="action-sell">포트 1개 매도 → 수익 실현</span><span>$13,048</span>
             </div>
           </div>
           <div className="guide-callout">
             <span className="callout-icon">🔄</span>
             <span>포트가 0이 될 때까지 이 과정을 반복합니다. 포트=0 이 되면 <strong>한 사이클 완성!</strong></span>
+          </div>
+        </section>
+
+        {/* 샀다치고 예시 */}
+        <section className="guide-section">
+          <h2 className="guide-section-title">🎭 샀다치고 — 실전 예시</h2>
+          <p className="guide-section-desc">
+            포랭이 MAX(15)에 도달한 이후에도 하락이 계속되면, 실제 매수 없이 <strong>LP만 낮은 가격으로 업데이트</strong>합니다.
+            이렇게 해야 반등 시 매도 기준이 낮아져 더 빨리 매도 기회가 생깁니다.
+          </p>
+          <div className="guide-example-table">
+            <div className="ex-row ex-header">
+              <span>날짜</span><span>종가</span><span>LP</span><span>포랭</span><span>행동</span><span>현금</span>
+            </div>
+            <div className="ex-row">
+              <span>Day 14</span><span>$7.20</span><span>$7.34</span><span className="val-warn">14</span>
+              <span className="action-buy">14차 매수 138주 @$7.20</span><span>$1,012</span>
+            </div>
+            <div className="ex-row">
+              <span>Day 15</span><span>$7.05</span><span>$7.20</span><span className="val-warn">15</span>
+              <span className="action-buy">15차 매수 141주 @$7.05 — 포랭 MAX!</span><span>$0</span>
+            </div>
+            <div className="ex-row ex-virtual">
+              <span>Day 16</span><span>$6.90</span><span className="val-warn">$7.05</span><span className="val-warn">15</span>
+              <span className="action-virtual">샀다치고 — LP만 $6.90으로 업데이트</span><span>$0</span>
+            </div>
+            <div className="ex-row ex-virtual">
+              <span>Day 17</span><span>$6.72</span><span className="val-warn">$6.90</span><span className="val-warn">15</span>
+              <span className="action-virtual">샀다치고 — LP만 $6.72로 업데이트</span><span>$0</span>
+            </div>
+            <div className="ex-row ex-highlight">
+              <span>Day 18</span><span>$6.85</span><span>$6.72</span><span className="val-blue">14</span>
+              <span className="action-sell">포트 1개 매도 — LP 덕분에 반등 즉시 매도</span><span>$1,003</span>
+            </div>
+          </div>
+          <div className="guide-callout">
+            <span className="callout-icon">💡</span>
+            <span>샀다치고가 없었다면 LP는 $7.05 그대로라, $7.05 이상 올라야 매도됩니다. LP를 계속 낮춰줬기 때문에 $6.85에도 즉시 매도 가능합니다.</span>
+          </div>
+          <div className="guide-callout" style={{ marginTop: 8 }}>
+            <span className="callout-icon">⚠️</span>
+            <span>샀다치고가 많을수록 하락 구간에서 현금이 바닥났다는 뜻입니다. 분할 수를 늘리거나 시작 시점을 조정해보세요.</span>
           </div>
         </section>
 
@@ -154,19 +200,6 @@ export default function GuidePage({ onClose }) {
           </div>
         </section>
 
-        {/* 샀다치고 */}
-        <section className="guide-section">
-          <h2 className="guide-section-title">🎭 샀다치고 (포랭 MAX 도달 시)</h2>
-          <p className="guide-section-desc">
-            포랭이 설정한 분할 수(예: 15)에 도달하면 더 이상 실제 매수를 하지 않습니다.
-            대신 <strong>매수한 것처럼 LP만 업데이트</strong>하여 다음 매도 기회를 유지합니다.
-          </p>
-          <div className="guide-callout">
-            <span className="callout-icon">💡</span>
-            <span>샀다치고가 많을수록 큰 하락에 대응하지 못했다는 의미입니다. 분할 수를 늘리거나 시작 시점을 조정해보세요.</span>
-          </div>
-        </section>
-
         {/* 주의사항 */}
         <section className="guide-section guide-section-warning">
           <h2 className="guide-section-title">⚠️ 투자 주의사항</h2>
@@ -179,7 +212,7 @@ export default function GuidePage({ onClose }) {
         </section>
 
         <div className="guide-footer">
-          <button className="guide-start-btn" onClick={onClose}>이해했어요, 시작하기 →</button>
+          <button className="guide-start-btn" onClick={onBack}>이해했어요, 시작하기 →</button>
         </div>
       </div>
     </div>
