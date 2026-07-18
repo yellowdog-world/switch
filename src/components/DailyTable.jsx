@@ -179,8 +179,11 @@ export default function DailyTable({ dailyLog, maxPorang = 15, symbol = "SOXL" }
                   const returnPct = d.cycleEndPnlPct !== null
                     ? d.cycleEndPnlPct
                     : (d.totalValue / d.cycleStartCash - 1) * 100;
+                  // 사이클 종료일: d.cycleStartCash는 engine에서 이미 업데이트된 값
+                  //   → 똥 사이클: cash + iweolCost (다음 사이클 시작 원금)
+                  //   → 일반 사이클: cash (전부 매도 후 현금)
                   const displayValue = d.cycleEndPnlPct !== null
-                    ? Math.round(d.cycleStartCash * (1 + d.cycleEndPnlPct / 100))
+                    ? d.cycleStartCash
                     : d.totalValue;
                   return (
                     <>
