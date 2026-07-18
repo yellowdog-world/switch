@@ -305,7 +305,7 @@ export default function SensitivityPage() {
 
           <CompareTable
             title="샀다치고 변형"
-            guide="포랭 만석 상태에서 매수 조건 충족 시 LP 처리 방식. 현재는 LP를 오늘 종가로 낮춰 반등 시 더 낮은 기준에서 매도가 발동됩니다. 비활성화하면 LP가 고정돼 더 높은 가격에서만 매도됩니다."
+            guide="포랭 만석(15/15) 상태에서 매수 조건이 또 충족될 때의 동작. ▸ 현재(LP 갱신): 실제 매수 없이 LP를 오늘 종가로 낮춤 → 조금만 반등해도 매도 발동, 사이클 빠르게 회전. ▸ 비활성화(LP 고정): LP를 바꾸지 않음 → 이전 실제 매수가까지 회복해야만 매도 발동, 더 오래 보유."
             rows={results.virtualBuyCompare}
             showVirtual
           />
