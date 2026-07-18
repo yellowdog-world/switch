@@ -216,8 +216,9 @@ function CycleDetail({ cycle, dailyLog, type, onClose, panelRef }) {
               <th>날짜</th>
               <th>종가</th>
               <th>행동</th>
-              <th>포트</th>
               <th>포랭</th>
+              <th>포트</th>
+              <th>랭크</th>
               <th>LP</th>
               <th>현금</th>
               <th>수익률</th>
@@ -234,8 +235,9 @@ function CycleDetail({ cycle, dailyLog, type, onClose, panelRef }) {
                 <td className="log-date">{d.date.slice(2)}</td>
                 <td className="log-num">{d.close.toFixed(2)}</td>
                 <td><ActionBadge action={d.action} /></td>
-                <td className="log-num">{d.port}</td>
                 <td className="log-num">{d.porang}</td>
+                <td className="log-num">{d.port}</td>
+                <td className="log-num">{d.rank}</td>
                 <td className="log-num log-muted">{d.lp ? d.lp.toFixed(2) : "-"}</td>
                 <td className="log-num log-muted">{Math.round(d.cash).toLocaleString()}</td>
                 <td className="log-num" style={{ color: d.returnPct >= 0 ? "var(--green)" : "var(--red)" }}>
