@@ -181,7 +181,17 @@ function CycleDetail({ cycle, dailyLog, type, onClose, panelRef, prefix = "$" })
             </tr>
           </thead>
           <tbody>
-            {logs.map(d => (
+            {logs.map(d => {
+              // 똥 사이클 마지막 날: 이월 주식이 totalValue에 시장가로 포함되어 헤더와 불일치
+              // → 이월 원가 기준인 cycle.pnl/pnlPct로 덮어쓰기
+              const isDongLastDay = cycle.dong && d.date === cycle.endDate;
+              const displayValue = isDongLastDay
+                ? Math.round(cycle.startCash + cycle.pnl)
+                : Math.round(d.totalValue);
+              const displayReturnPct = isDongLastDay
+                ? cycle.pnlPct
+                : (d.totalValue / cycle.startCash - 1) * 100;
+              return (
               <tr key={d.date} className={
                 d.updownBuy ? "log-row-buy"
                 : d.updownSell ? "log-row-sell"
@@ -195,11 +205,13 @@ function CycleDetail({ cycle, dailyLog, type, onClose, panelRef, prefix = "$" })
                 <td className="log-num">{d.port}</td>
                 <td className="log-num">{d.rank}</td>
                 <td className="log-num log-muted">{d.lp ? d.lp.toFixed(2) : "-"}</td>
-                <td className="log-num log-muted">{Math.round(d.totalValue).toLocaleString()}</td>
-                <td className="log-num" style={{ color: d.totalValue >= cycle.startCash ? "var(--green)" : "var(--red)" }}>
-                  {(() => { const r = (d.totalValue / cycle.startCash - 1) * 100; return `${r >= 0 ? "+" : ""}${r.toFixed(2)}%`; })()}
+                <td className="log-num log-muted">{displayValue.toLocaleString()}</td>
+                <td className="log-num" style={{ color: displayReturnPct >= 0 ? "var(--green)" : "var(--red)" }}>
+                  {`${displayReturnPct >= 0 ? "+" : ""}${displayReturnPct.toFixed(2)}%`}
                 </td>
               </tr>
+              );
+            })}
             ))}
           </tbody>
         </table>
