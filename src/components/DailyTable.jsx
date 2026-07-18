@@ -56,8 +56,13 @@ function ColTip({ label, formula, desc, example }) {
 }
 
 // maxPorang: 사용자가 설정한 분할 수. 포랭 경고색 기준(70%)을 동적으로 계산하기 위해 받음.
-export default function DailyTable({ dailyLog, maxPorang = 15 }) {
+export default function DailyTable({ dailyLog, maxPorang = 15, symbol = "SOXL" }) {
   const [filter, setFilter] = useState("all");
+  const prefix = symbol.endsWith(".KS") ? "₩" : "$";
+  const firstLog = dailyLog[0];
+  const lastLog = dailyLog[dailyLog.length - 1];
+  const totalPnl = lastLog.totalValue - firstLog.totalValue;
+  const totalPnlPct = (totalPnl / firstLog.totalValue) * 100;
 
   const filtered = dailyLog.filter(d => {
     if (filter === "action") return d.action !== "-";
@@ -68,6 +73,16 @@ export default function DailyTable({ dailyLog, maxPorang = 15 }) {
 
   return (
     <>
+      <div className="backtest-period-summary">
+        <span>{prefix}{Math.round(firstLog.totalValue).toLocaleString()}</span>
+        <span className="bps-arrow">→</span>
+        <span>{prefix}{Math.round(lastLog.totalValue).toLocaleString()}</span>
+        <span className="bps-pnl" style={{ color: totalPnl >= 0 ? "var(--green)" : "var(--red)" }}>
+          ({totalPnl >= 0 ? "+" : ""}{prefix}{Math.round(Math.abs(totalPnl)).toLocaleString()}
+          &nbsp;/&nbsp;
+          {totalPnlPct >= 0 ? "+" : ""}{totalPnlPct.toFixed(2)}%)
+        </span>
+      </div>
       <div className="filter-bar">
         {[["all", "전체"], ["action", "거래일만"], ["buy", "매수"], ["sell", "매도"]].map(([k, l]) => (
           <button
@@ -123,8 +138,8 @@ export default function DailyTable({ dailyLog, maxPorang = 15 }) {
               />
               <ColTip
                 label="수익률"
-                formula="(totalValue - investmentUSD) / investmentUSD × 100"
-                desc="초기 투자금 대비 현재 전체 평가액의 증감률."
+                formula="(totalValue - cycleStartCash) / cycleStartCash × 100"
+                desc="해당 사이클 시작 시점 원금 대비 현재 전체 평가액의 증감률."
               />
               <ColTip
                 label="사이클"
@@ -157,8 +172,8 @@ export default function DailyTable({ dailyLog, maxPorang = 15 }) {
                   ) : "-"}
                 </td>
                 <td>${d.totalValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
-                <td className={d.returnPct >= 0 ? "val-green" : "val-red"}>
-                  {d.returnPct >= 0 ? "+" : ""}{d.returnPct.toFixed(2)}%
+                <td className={(d.totalValue / d.cycleStartCash - 1) >= 0 ? "val-green" : "val-red"}>
+                  {(() => { const r = (d.totalValue / d.cycleStartCash - 1) * 100; return `${r >= 0 ? "+" : ""}${r.toFixed(2)}%`; })()}
                 </td>
                 <td>
                   {d.cycleEndPnlPct !== null ? (

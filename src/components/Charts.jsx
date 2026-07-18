@@ -40,7 +40,7 @@ export default function Charts({ dailyLog, cycles, symbol, symbolName, maxPorang
         {tab === "return" && <ReturnChart data={sampled} symbol={symbol} symbolName={symbolName || symbol} />}
         {tab === "porang" && <PorangChart data={sampled} />}
         {tab === "cycle" && <CycleChart cycles={cycles} />}
-        {tab === "daily" && <DailyTable dailyLog={dailyLog} maxPorang={maxPorang} />}
+        {tab === "daily" && <DailyTable dailyLog={dailyLog} maxPorang={maxPorang} symbol={symbol} />}
       </div>
     </section>
   );

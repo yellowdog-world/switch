@@ -320,6 +320,7 @@ export function runBacktest(prices, investmentUSD, startFrom = null, maxPorang =
       // avgCost: 보유 주식이 없으면 null (테이블에서 '-' 표시)
       avgCost: totalShares > 0 ? parseFloat((totalUpdownCost / totalShares).toFixed(4)) : null,
       cycleNum: currentCycleNum,
+      cycleStartCash: parseFloat(cycleStartCash.toFixed(2)),
       cycleEndPnlPct, // 사이클 종료일에만 값, 나머지는 null
       cycleEndNum,
     });

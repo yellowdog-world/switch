@@ -284,6 +284,9 @@ body {
   cursor: pointer;
 }
 .toggle-btn:hover { color: var(--text); }
+.backtest-period-summary { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; font-size: 15px; font-weight: 600; }
+.bps-arrow { color: var(--text-muted); }
+.bps-pnl { font-size: 14px; }
 .filter-bar { display: flex; align-items: center; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
 .row-count { margin-left: auto; font-size: 11px; color: var(--muted); }
 .table-wrap { overflow-x: auto; }
