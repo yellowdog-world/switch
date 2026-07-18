@@ -6,6 +6,7 @@ import ScanPage from "./components/ScanPage";
 import RollingPage from "./components/RollingPage";
 import SensitivityPage from "./components/SensitivityPage";
 import CyclePage from "./components/CyclePage";
+import GuidePage from "./components/GuidePage";
 import { runBacktest } from "./engine/switchEngine";
 import { fetchPrices } from "./utils/stockCache";
 
@@ -40,6 +41,7 @@ function DogLogo() {
 }
 
 export default function App() {
+  const [showGuide, setShowGuide] = useState(false);
   const [mode, setMode] = useState(() => {
     const p = new URLSearchParams(window.location.search);
     if (p.get("mode") === "rolling") return "rolling";
@@ -96,10 +98,11 @@ export default function App() {
 
   return (
     <div className="app">
+      {showGuide && <GuidePage onClose={() => setShowGuide(false)} />}
       <header className="header" ref={headerRef}>
         <div className="header-inner">
           <div className="header-top">
-            <div className="logo">
+            <div className="logo" onClick={() => setShowGuide(true)} title="전략 가이드" style={{ cursor: "pointer" }}>
               <div className="logo-icon"><DogLogo /></div>
               <div className="logo-text">
                 <div className="logo-title">황구</div>
