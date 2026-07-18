@@ -9,6 +9,18 @@ export default function Summary({ summary, params, dailyLog }) {
     : null;
   const prefix = params.symbol.endsWith(".KS") ? "₩" : "$";
 
+  const buyHoldMdd = (() => {
+    if (!dailyLog?.length) return null;
+    let peak = dailyLog[0].close;
+    let maxDD = 0;
+    for (const d of dailyLog) {
+      if (d.close > peak) peak = d.close;
+      const dd = (peak - d.close) / peak * 100;
+      if (dd > maxDD) maxDD = dd;
+    }
+    return maxDD;
+  })();
+
   return (
     <section className="summary-section">
       <h2 className="section-title">
@@ -53,6 +65,13 @@ export default function Summary({ summary, params, dailyLog }) {
             value={`${buyHoldReturn >= 0 ? "+" : ""}${buyHoldReturn.toFixed(2)}%`}
             sub={`${prefix}${firstClose.toFixed(2)} → ${prefix}${lastClose.toFixed(2)}`}
             highlight={buyHoldReturn >= 0 ? "positive" : "negative"}
+          />
+        )}
+        {buyHoldMdd !== null && (
+          <StatCard
+            label={`${params.symbol} 본주 MDD`}
+            value={`-${buyHoldMdd.toFixed(2)}%`}
+            highlight="negative"
           />
         )}
       </div>
