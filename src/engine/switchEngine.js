@@ -148,6 +148,7 @@ export function runBacktest(prices, investmentUSD, startFrom = null, maxPorang =
               lp = today.close;
               port += 1;
               updownBuy = true;
+              extraBuyNeeded += spent; // 초과 매수 금액 누적
               action.push(`업다운 매수 (${porang + 1}차·초과) @${today.close.toFixed(2)}(${shares}주)`);
             } else {
               // cash 부족 - 살 수 있었을 금액을 누적
@@ -159,8 +160,7 @@ export function runBacktest(prices, investmentUSD, startFrom = null, maxPorang =
               action.push(`샀다치고 (cash 부족) @${today.close.toFixed(2)}`);
             }
           } else {
-            // 샀다치고 — 실제 매수했다면 필요했을 금액 누적
-            extraBuyNeeded += Math.floor(getUnitAmount(porang) / today.close) * today.close;
+            // 샀다치고
             if (virtualBuyMode === 'update_lp') {
               lastUpdownPrice = today.close;
               lp = today.close;
