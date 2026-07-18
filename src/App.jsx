@@ -4,6 +4,7 @@ import Charts from "./components/Charts";
 import Summary from "./components/Summary";
 import ScanPage from "./components/ScanPage";
 import RollingPage from "./components/RollingPage";
+import SensitivityPage from "./components/SensitivityPage";
 import { runBacktest } from "./engine/switchEngine";
 import { fetchPrices } from "./utils/stockCache";
 
@@ -41,6 +42,7 @@ export default function App() {
   const [mode, setMode] = useState(() => {
     const p = new URLSearchParams(window.location.search);
     if (p.get("mode") === "rolling") return "rolling";
+    if (p.get("mode") === "sensitivity") return "sensitivity";
     if (p.get("mode") === "scan") return "scan";
     return "backtest"; // 기본 페이지
   });
@@ -105,6 +107,7 @@ export default function App() {
             <nav className="main-nav">
               <button className={`nav-btn ${mode === "backtest" ? "nav-active" : ""}`} onClick={() => setMode("backtest")}>백테스트</button>
               <button className={`nav-btn ${mode === "rolling" ? "nav-active" : ""}`} onClick={() => setMode("rolling")}>롤링 분석</button>
+              <button className={`nav-btn ${mode === "sensitivity" ? "nav-active" : ""}`} onClick={() => setMode("sensitivity")}>변수민감도</button>
               <button className={`nav-btn ${mode === "scan" ? "nav-active" : ""}`} onClick={() => setMode("scan")}>종목 스캔</button>
             </nav>
           </div>
@@ -114,6 +117,7 @@ export default function App() {
       <main className="main">
         {mode === "scan" && <ScanPage />}
         {mode === "rolling" && <RollingPage prices={rawPrices} params={params} onGoBacktest={() => setMode("backtest")} />}
+        {mode === "sensitivity" && <SensitivityPage />}
 
         {mode === "backtest" && (
           <>

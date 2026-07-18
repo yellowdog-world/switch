@@ -802,3 +802,130 @@ body {
   border-top: 1px solid var(--border);
   padding-top: 5px;
 }
+
+/* ── Sensitivity Page ── */
+.sensitivity-page { width: 100%; }
+
+.sens-section {
+  margin-top: 36px;
+  padding-top: 28px;
+  border-top: 1px solid rgba(255,255,255,0.07);
+}
+.sens-section-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 10px;
+}
+.sens-guide {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.7;
+  margin-bottom: 14px;
+  background: rgba(255,255,255,0.03);
+  border-radius: 6px;
+  padding: 8px 12px;
+}
+
+/* 비교 테이블 */
+.sens-table-wrap { overflow-x: auto; }
+.sens-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.sens-table thead { border-bottom: 1px solid rgba(255,255,255,0.1); }
+.sens-th-metric {
+  text-align: left;
+  padding: 8px 12px 8px 0;
+  color: var(--muted);
+  font-weight: 500;
+  white-space: nowrap;
+  min-width: 80px;
+}
+.sens-th-val {
+  text-align: center;
+  padding: 8px 14px;
+  color: var(--muted);
+  font-weight: 500;
+  white-space: nowrap;
+  font-size: 11px;
+  line-height: 1.4;
+}
+.sens-baseline-tag {
+  display: inline-block;
+  margin-left: 4px;
+  font-size: 9px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: rgba(0,212,170,0.15);
+  color: var(--accent);
+  vertical-align: middle;
+}
+.sens-td-metric {
+  padding: 7px 12px 7px 0;
+  color: var(--muted);
+  font-size: 11px;
+  white-space: nowrap;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.sens-td-val {
+  text-align: center;
+  padding: 7px 14px;
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 500;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  white-space: nowrap;
+}
+.sens-table tbody tr:last-child td { border-bottom: none; }
+
+/* 2D 매트릭스 */
+.sens-matrix-wrap { overflow-x: auto; margin-top: 8px; }
+.sens-matrix-table {
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.sens-matrix-corner {
+  padding: 8px 16px 8px 0;
+  color: var(--muted);
+  font-weight: 500;
+  font-size: 11px;
+  white-space: nowrap;
+  text-align: left;
+}
+.sens-matrix-col-head {
+  padding: 8px 20px;
+  color: var(--muted);
+  font-weight: 500;
+  font-size: 11px;
+  text-align: center;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.sens-matrix-row-head {
+  padding: 8px 16px 8px 0;
+  color: var(--muted);
+  font-size: 11px;
+  white-space: nowrap;
+  text-align: left;
+}
+.sens-matrix-cell {
+  text-align: center;
+  padding: 8px 20px;
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.85);
+  border-radius: 4px;
+  cursor: default;
+  white-space: nowrap;
+  transition: opacity 0.15s;
+}
+.sens-matrix-cell:hover { opacity: 0.8; }
+.sens-matrix-current {
+  outline: 2px solid rgba(0,212,170,0.6);
+  outline-offset: -2px;
+}
+.sens-star {
+  color: var(--accent);
+  font-size: 10px;
+}
