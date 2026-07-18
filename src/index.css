@@ -1313,3 +1313,32 @@ body {
 .log-date { color: var(--muted); white-space: nowrap; font-size: 11px; }
 .log-num  { font-variant-numeric: tabular-nums; white-space: nowrap; }
 .log-muted { color: var(--muted); }
+
+/* ── 이벤트 기간 칩 ─────────────────────────────────────────────────── */
+.event-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 6px;
+}
+.event-chip { font-size: 11px; padding: 3px 9px; }
+.event-chip-crash {
+  background: rgba(248,113,113,0.1);
+  border-color: rgba(248,113,113,0.35);
+  color: #fca5a5;
+}
+.event-chip-crash:hover {
+  background: rgba(248,113,113,0.2);
+  border-color: rgba(248,113,113,0.6);
+}
+.event-chip-rally {
+  background: rgba(52,211,153,0.1);
+  border-color: rgba(52,211,153,0.35);
+  color: #6ee7b7;
+}
+.event-chip-rally:hover {
+  background: rgba(52,211,153,0.2);
+  border-color: rgba(52,211,153,0.6);
+}

@@ -22,6 +22,18 @@ const PERIODS = [
   { label: "10년",  years: 10 },
 ];
 
+const EVENTS = [
+  { label: "2018 무역전쟁",     from: "2018-10-01", to: "2018-12-31", type: "crash" },
+  { label: "COVID 폭락",        from: "2020-02-20", to: "2020-03-18", type: "crash" },
+  { label: "2022 금리인상 폭락", from: "2021-11-01", to: "2022-10-31", type: "crash" },
+  { label: "엔캐리 청산",        from: "2024-07-10", to: "2024-08-05", type: "crash" },
+  { label: "관세전쟁",           from: "2025-02-18", to: "2025-04-07", type: "crash" },
+  { label: "COVID 반등",         from: "2020-03-18", to: "2021-11-22", type: "rally" },
+  { label: "AI 반등",            from: "2022-10-13", to: "2023-07-31", type: "rally" },
+  { label: "AI 랠리",            from: "2024-04-19", to: "2024-06-18", type: "rally" },
+  { label: "트럼프 당선 랠리",   from: "2024-11-05", to: "2024-11-25", type: "rally" },
+];
+
 function getPeriodDates(p) {
   const to = new Date();
   const from = new Date(to);
@@ -302,6 +314,15 @@ export default function CyclePage() {
       </div>
 
       <div className="rolling-form">
+        <div className="event-chips">
+          {EVENTS.map(e => (
+            <button key={e.label}
+              className={`chip event-chip event-chip-${e.type}`}
+              onClick={() => { setFrom(e.from); setTo(e.to); }}>
+              {e.label}
+            </button>
+          ))}
+        </div>
         <div className="rolling-form-periods">
           {PERIODS.map(p => (
             <button key={p.label} className="chip"
