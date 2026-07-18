@@ -32,7 +32,7 @@ function getDefaultFrom() {
   return toKSTDateStr(d);
 }
 
-const PORANG_SWEEP = [10, 12, 15, 18, 20];
+const PORANG_SWEEP = [8, 10, 12, 15, 18, 20, 30];
 const BUYRATE_SWEEP = [0.001, 0.002, 0.003, 0.005];
 
 // 매트릭스 내 최솟값~최댓값 기준 상대 색상
