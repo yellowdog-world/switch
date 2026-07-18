@@ -35,12 +35,30 @@ function getDefaultFrom() {
 const PORANG_SWEEP = [10, 12, 15, 18, 20];
 const BUYRATE_SWEEP = [0.001, 0.002, 0.003, 0.005];
 
-function heatColor(value, maxAbs) {
-  if (maxAbs === 0) return "transparent";
-  const ratio = Math.min(Math.abs(value) / maxAbs, 1);
-  const alpha = 0.12 + ratio * 0.55;
-  if (value >= 0) return `rgba(52,211,153,${alpha.toFixed(2)})`;
-  return `rgba(248,113,113,${alpha.toFixed(2)})`;
+// 매트릭스 내 최솟값~최댓값 기준 상대 색상
+// 최고값 → 진한 초록, 최솟값 → 진한 빨강 (양수만 있으면 흐린 초록~진한 초록)
+function heatColor(value, min, max) {
+  if (max === min) return "rgba(52,211,153,0.4)";
+  const ratio = (value - min) / (max - min); // 0=최솟값, 1=최댓값
+
+  if (min >= 0) {
+    // 전부 양수: 흐린 초록(최저) → 진한 초록(최고)
+    const alpha = 0.10 + ratio * 0.78;
+    return `rgba(52,211,153,${alpha.toFixed(2)})`;
+  } else if (max <= 0) {
+    // 전부 음수: 진한 빨강(최저) → 흐린 빨강(최고)
+    const alpha = 0.88 - ratio * 0.78;
+    return `rgba(248,113,113,${alpha.toFixed(2)})`;
+  } else {
+    // 혼합: 양수 → 초록, 음수 → 빨강, 0 근처 → 흐림
+    if (value >= 0) {
+      const alpha = 0.10 + (value / max) * 0.78;
+      return `rgba(52,211,153,${alpha.toFixed(2)})`;
+    } else {
+      const alpha = 0.10 + (value / min) * 0.78;
+      return `rgba(248,113,113,${alpha.toFixed(2)})`;
+    }
+  }
 }
 
 function fmtReturn(v) {
@@ -50,7 +68,8 @@ function fmtReturn(v) {
 
 function MatrixTable({ matrix, basePorang, baseBuyRate }) {
   const allValues = matrix.flat().map(s => s.totalReturn);
-  const maxAbs = Math.max(...allValues.map(Math.abs), 0.01);
+  const min = Math.min(...allValues);
+  const max = Math.max(...allValues);
 
   return (
     <div className="sens-matrix-wrap">
@@ -73,7 +92,7 @@ function MatrixTable({ matrix, basePorang, baseBuyRate }) {
                 return (
                   <td key={br}
                     className={`sens-matrix-cell${isCurrent ? " sens-matrix-current" : ""}`}
-                    style={{ background: heatColor(s.totalReturn, maxAbs) }}
+                    style={{ background: heatColor(s.totalReturn, min, max) }}
                     title={`${p}분할 / ${(br * 100).toFixed(1)}% | 최대낙폭: -${s.maxDrawdown.toFixed(1)}% | 사이클: ${s.totalCycles}`}>
                     {isCurrent && <span className="sens-star">★ </span>}
                     {fmtReturn(s.totalReturn)}
@@ -296,9 +315,7 @@ export default function SensitivityPage() {
           <div className="sens-section">
             <div className="sens-section-title">분할수 × 매수배율 수익률 매트릭스</div>
             <div className="sens-guide">
-              분할수와 매수배율 조합 20가지의 총수익률. 진한 초록 = 가장 좋은 수익, 진한 빨강 = 최대 손실.
-              기준값({results.basePorang}분할 / {(results.baseBuyRate * 100).toFixed(2)}%)에 ★ 표시.
-              셀에 마우스를 올리면 최대낙폭과 사이클 수도 볼 수 있습니다.
+              분할수와 매수배율 조합 20가지의 총수익률 비교. 색은 이 매트릭스 안에서의 상대적 순위 — 진한 초록 = 가장 높은 수익, 흐린 색 = 상대적으로 낮은 수익 (손실 구간이 있으면 빨강). 기준값({results.basePorang}분할 / {(results.baseBuyRate * 100).toFixed(2)}%)에 ★ 표시. 셀에 마우스를 올리면 최대낙폭과 사이클 수도 볼 수 있습니다.
             </div>
             <MatrixTable matrix={results.matrix} basePorang={results.basePorang} baseBuyRate={results.baseBuyRate} />
           </div>
