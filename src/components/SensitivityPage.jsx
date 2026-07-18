@@ -175,6 +175,24 @@ function BestSummary({ results }) {
         각 파라미터를 개별 비교한 결과. 수익률만으로 판단하지 말고 아래 표의 최대낙폭·사이클 수도 함께 확인하세요.<br />
         단일 백테스트에서 <strong style={{color:"rgba(255,255,255,0.75)"}}>차이가 10%p 미만이면 시작 시점 하나가 달라져도 결과가 뒤집힐 수 있어 노이즈 범위</strong>입니다. 차이가 유의미한지 확인하려면 롤링 분석 탭에서 여러 시작점으로 패턴 일관성을 확인하세요.
       </div>
+      <details className="sens-wr-guide">
+        <summary className="sens-wr-guide-toggle">승률이란? ▾</summary>
+        <div className="sens-wr-guide-body">
+          <p>"어떤 시점에 시작해도 수익이 났는가"의 비율입니다. 동일 기간을 2주 간격으로 시작점을 밀면서 반복 백테스트한 결과입니다.</p>
+          <div className="sens-wr-table">
+            <div className="sens-wr-row"><span className="sens-wr-badge wr-green">80%+</span><span>언제 시작해도 대체로 수익 — 전략 자체에 우위 있음</span></div>
+            <div className="sens-wr-row"><span className="sens-wr-badge wr-yellow">60~80%</span><span>대체로 양호, 일부 구간 주의</span></div>
+            <div className="sens-wr-row"><span className="sens-wr-badge wr-orange">40~60%</span><span>시작 시점에 민감 — 타이밍 운이 결과를 좌우</span></div>
+            <div className="sens-wr-row"><span className="sens-wr-badge wr-red">40% 미만</span><span>해당 기간이 전략에 불리한 환경</span></div>
+          </div>
+          <p className="sens-wr-tip">
+            <strong>비교 활용법</strong><br />
+            수익률 차이와 승률 차이 방향이 <strong>일치</strong>할 때만 파라미터 변경을 믿을 수 있습니다.<br />
+            예) 수익 +90%p인데 승률 차이 1%p → 운에 의한 차이일 가능성 높음<br />
+            예) 수익 +90%p이고 승률도 +13%p → 실질적으로 더 강한 설정
+          </p>
+        </div>
+      </details>
       <div className="sens-best-grid-head">
         <span>항목</span>
         <span>현재(기준)</span>

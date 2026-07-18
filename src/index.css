@@ -1031,6 +1031,58 @@ body {
   border-radius: 3px;
   padding: 1px 4px;
 }
+
+/* 승률 안내 아코디언 */
+.sens-wr-guide {
+  margin: 10px 0 14px;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.sens-wr-guide-toggle {
+  cursor: pointer;
+  font-size: 11px;
+  color: rgba(255,255,255,0.45);
+  padding: 7px 12px;
+  list-style: none;
+  user-select: none;
+}
+.sens-wr-guide-toggle:hover { color: rgba(255,255,255,0.7); }
+.sens-wr-guide[open] .sens-wr-guide-toggle { color: rgba(255,255,255,0.6); border-bottom: 1px solid rgba(255,255,255,0.08); }
+.sens-wr-guide-body {
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.5);
+  line-height: 1.6;
+}
+.sens-wr-guide-body p { margin: 0; }
+.sens-wr-table { display: flex; flex-direction: column; gap: 5px; }
+.sens-wr-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.sens-wr-badge {
+  font-size: 10px;
+  font-weight: 600;
+  border-radius: 4px;
+  padding: 2px 7px;
+  white-space: nowrap;
+  min-width: 56px;
+  text-align: center;
+}
+.wr-green  { background: rgba(52,211,153,0.15); color: rgba(52,211,153,0.9); }
+.wr-yellow { background: rgba(250,204,21,0.15);  color: rgba(250,204,21,0.9); }
+.wr-orange { background: rgba(251,146,60,0.15);  color: rgba(251,146,60,0.9); }
+.wr-red    { background: rgba(248,113,113,0.15); color: rgba(248,113,113,0.9); }
+.sens-wr-tip {
+  border-top: 1px solid rgba(255,255,255,0.07);
+  padding-top: 10px;
+  color: rgba(255,255,255,0.45);
+}
 @media (max-width: 760px) {
   .sens-best-grid-head { display: none; }
   .sens-best-row {
