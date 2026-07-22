@@ -7,6 +7,7 @@ import RollingPage from "./components/RollingPage";
 import SensitivityPage from "./components/SensitivityPage";
 import CyclePage from "./components/CyclePage";
 import GuidePage from "./components/GuidePage";
+import QldComparePage from "./components/QldComparePage";
 import { runBacktest } from "./engine/switchEngine";
 import { fetchPrices } from "./utils/stockCache";
 
@@ -47,6 +48,7 @@ export default function App() {
     if (p.get("mode") === "sensitivity") return "sensitivity";
     if (p.get("mode") === "scan") return "scan";
     if (p.get("mode") === "cycle") return "cycle";
+    if (p.get("mode") === "compare") return "compare";
     return "backtest"; // 기본 페이지
   });
   const headerRef = useRef(null);
@@ -113,6 +115,7 @@ export default function App() {
               <button className={`nav-btn ${mode === "sensitivity" ? "nav-active" : ""}`} onClick={() => setMode("sensitivity")}>민감도 분석</button>
               <button className={`nav-btn ${mode === "scan" ? "nav-active" : ""}`} onClick={() => setMode("scan")}>종목 스캔</button>
               <button className={`nav-btn ${mode === "cycle" ? "nav-active" : ""}`} onClick={() => setMode("cycle")}>사이클 분석</button>
+              <button className={`nav-btn ${mode === "compare" ? "nav-active" : ""}`} onClick={() => setMode("compare")}>vs QLD</button>
             </nav>
           </div>
         </div>
@@ -124,6 +127,7 @@ export default function App() {
         {mode === "cycle" && <CyclePage />}
         {mode === "rolling" && <RollingPage prices={rawPrices} params={params} onGoBacktest={() => setMode("backtest")} />}
         {mode === "sensitivity" && <SensitivityPage />}
+        {mode === "compare" && <QldComparePage />}
 
         {mode === "backtest" && (
           <>

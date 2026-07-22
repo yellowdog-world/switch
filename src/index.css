@@ -1455,3 +1455,88 @@ body {
   cursor: pointer; transition: opacity 0.15s;
 }
 .guide-start-btn:hover { opacity: 0.85; }
+
+/* ── Compare Page ── */
+.compare-page { width: 100%; }
+
+.compare-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.control-label {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 0.05em;
+  margin-bottom: 6px;
+}
+
+.control-row-2 {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.control-row-2 > .control-group { flex: 1; min-width: 140px; }
+
+.input-prefix-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.input-prefix {
+  position: absolute;
+  left: 10px;
+  color: var(--muted);
+  font-size: 13px;
+  pointer-events: none;
+  z-index: 1;
+}
+.input-prefixed { padding-left: 22px !important; }
+.input-prefixed:disabled { opacity: 0.4; }
+input:disabled, select:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* 적립일 배지 */
+.badge-contrib {
+  display: inline-flex; align-items: center;
+  background: rgba(52,211,153,0.15);
+  color: var(--green);
+  border: 1px solid rgba(52,211,153,0.3);
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-size: 10px;
+  white-space: nowrap;
+}
+.badge-buy {
+  display: inline-flex; align-items: center;
+  background: rgba(96,165,250,0.15);
+  color: var(--blue);
+  border: 1px solid rgba(96,165,250,0.3);
+  border-radius: 4px; padding: 1px 6px; font-size: 10px;
+}
+.badge-sell {
+  display: inline-flex; align-items: center;
+  background: rgba(248,113,113,0.15);
+  color: var(--red);
+  border: 1px solid rgba(248,113,113,0.3);
+  border-radius: 4px; padding: 1px 6px; font-size: 10px;
+}
+.badge-virtual {
+  display: inline-flex; align-items: center;
+  background: rgba(245,158,11,0.15);
+  color: var(--accent2);
+  border: 1px solid rgba(245,158,11,0.3);
+  border-radius: 4px; padding: 1px 6px; font-size: 10px;
+}
+.badge-tteob {
+  display: inline-flex; align-items: center;
+  background: rgba(244,114,182,0.15);
+  color: var(--pink);
+  border: 1px solid rgba(244,114,182,0.3);
+  border-radius: 4px; padding: 1px 6px; font-size: 10px;
+}
+
+/* 적립일 행 하이라이트 */
+.row-contrib { background: rgba(52,211,153,0.04); }
+
