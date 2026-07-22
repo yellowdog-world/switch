@@ -44,6 +44,7 @@ export default function QldComparePage() {
   const [monthlyAmount, setMonthlyAmount] = useState(3000);
   const [contribDay, setContribDay] = useState(10);
   const [switchSymbol, setSwitchSymbol] = useState("SOXL");
+  const [compareSymbol, setCompareSymbol] = useState("QLD");
   const [porang, setPorang] = useState(15);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -70,13 +71,13 @@ export default function QldComparePage() {
       d.setDate(d.getDate() - 7);
       const lookbackFrom = d.toISOString().split("T")[0];
 
-      const [switchData, qldData] = await Promise.all([
+      const [switchData, cmpData] = await Promise.all([
         fetchPrices(switchSymbol, lookbackFrom, to),
-        fetchPrices("QLD", lookbackFrom, to),
+        fetchPrices(compareSymbol, lookbackFrom, to),
       ]);
 
       if (switchData.prices.length < 2) throw new Error(`${switchSymbol} 데이터가 부족합니다.`);
-      if (qldData.prices.length < 2) throw new Error("QLD 데이터가 부족합니다.");
+      if (cmpData.prices.length < 2) throw new Error(`${compareSymbol} 데이터가 부족합니다.`);
 
       const initialUSD = investMode === "monthly" ? 0 : Number(initialAmount);
       const monthly = investMode === "lump" ? 0 : Number(monthlyAmount);
@@ -90,7 +91,7 @@ export default function QldComparePage() {
       };
 
       const swResult = runSwitchCompare(switchData.prices, initialUSD, opts);
-      const qldResult = runQldBuyHold(qldData.prices, initialUSD, opts);
+      const qldResult = runQldBuyHold(cmpData.prices, initialUSD, opts);
 
       // 날짜 교집합으로 차트 데이터 구성
       const swByDate = {};
@@ -121,6 +122,7 @@ export default function QldComparePage() {
         chartData: sampleData(rawChart, 300),
         mergedLog,
         switchSymbol,
+        compareSymbol,
       });
     } catch (e) {
       setError(e.message);
@@ -141,7 +143,7 @@ export default function QldComparePage() {
       {/* ── 컨트롤 ── */}
       <section className="controls-section">
         <h2 className="section-title">
-          전략 vs QLD 비교
+          {switchSymbol} 전략 vs {compareSymbol} 비교
           <span className="section-sub">월 적립 포함 누적 수익률 비교 시뮬레이션</span>
         </h2>
 
@@ -233,10 +235,18 @@ export default function QldComparePage() {
               </select>
             </div>
             <div className="control-group">
-              <label className="control-label">비교 종목</label>
+              <label className="control-label">전략 종목 (스위치)</label>
               <select className="input" value={switchSymbol} onChange={e => setSwitchSymbol(e.target.value)}>
                 <option value="SOXL">SOXL</option>
                 <option value="TQQQ">TQQQ</option>
+              </select>
+            </div>
+            <div className="control-group">
+              <label className="control-label">비교 대상 (보유)</label>
+              <select className="input" value={compareSymbol} onChange={e => setCompareSymbol(e.target.value)}>
+                <option value="QLD">QLD (2× QQQ)</option>
+                <option value="QQQ">QQQ</option>
+                <option value="SPY">SPY (S&amp;P 500)</option>
               </select>
             </div>
           </div>
@@ -284,7 +294,7 @@ export default function QldComparePage() {
 }
 
 function CompareSummary({ result }) {
-  const { swResult, qldResult, switchSymbol } = result;
+  const { swResult, qldResult, switchSymbol, compareSymbol } = result;
   const diff = swResult.totalReturn - qldResult.totalReturn;
 
   return (
@@ -303,7 +313,7 @@ function CompareSummary({ result }) {
           highlight={swResult.totalReturn >= 0 ? "positive" : "negative"}
         />
         <StatCard
-          label="QLD 보유 평가액"
+          label={`${compareSymbol} 보유 평가액`}
           value={`$${Math.round(qldResult.finalValue).toLocaleString()}`}
           sub={`${qldResult.totalReturn >= 0 ? "+" : ""}${qldResult.totalReturn.toFixed(2)}%`}
           highlight={qldResult.totalReturn >= 0 ? "positive" : "negative"}
@@ -311,7 +321,7 @@ function CompareSummary({ result }) {
         <StatCard
           label="수익률 차이"
           value={`${diff >= 0 ? "+" : ""}${diff.toFixed(2)}%p`}
-          sub={diff >= 0 ? `전략이 QLD 대비 우위` : `QLD가 전략 대비 우위`}
+          sub={diff >= 0 ? `전략이 ${compareSymbol} 대비 우위` : `${compareSymbol}이 전략 대비 우위`}
           highlight={diff >= 0 ? "positive" : "negative"}
         />
       </div>
@@ -330,7 +340,7 @@ function StatCard({ label, value, sub, highlight }) {
 }
 
 function CompareChart({ result }) {
-  const { chartData, switchSymbol } = result;
+  const { chartData, switchSymbol, compareSymbol } = result;
 
   const CustomTooltip = ({ active, payload, label }) => {
     if (!active || !payload?.length) return null;
@@ -384,7 +394,7 @@ function CompareChart({ result }) {
               stroke="#f59e0b"
               strokeWidth={2}
               dot={false}
-              name="QLD 보유"
+              name={`${compareSymbol} 보유`}
               strokeDasharray="6 3"
             />
           </LineChart>
@@ -396,7 +406,7 @@ function CompareChart({ result }) {
 
 function CompareDailyLog({ result }) {
   const [filter, setFilter] = useState("action");
-  const { mergedLog, switchSymbol } = result;
+  const { mergedLog, switchSymbol, compareSymbol } = result;
 
   const filtered = mergedLog.filter(d => {
     const sw = d.sw;
@@ -437,9 +447,9 @@ function CompareDailyLog({ result }) {
               <th>{switchSymbol} 종가</th>
               <th>전략 평가액</th>
               <th>전략 수익률</th>
-              <th>QLD 종가</th>
-              <th>QLD 평가액</th>
-              <th>QLD 수익률</th>
+              <th>{compareSymbol} 종가</th>
+              <th>{compareSymbol} 평가액</th>
+              <th>{compareSymbol} 수익률</th>
               <th>비고</th>
             </tr>
           </thead>
