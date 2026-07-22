@@ -44,7 +44,7 @@ export default function QldComparePage() {
   const [monthlyAmount, setMonthlyAmount] = useState(3000);
   const [contribDay, setContribDay] = useState(10);
   const [switchSymbol, setSwitchSymbol] = useState("SOXL");
-  const [compareSymbol, setCompareSymbol] = useState("QLD");
+  const [compareSymbol, setCompareSymbol] = useState("QQQ");
   const [porang, setPorang] = useState(15);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -235,7 +235,7 @@ export default function QldComparePage() {
               </select>
             </div>
             <div className="control-group">
-              <label className="control-label">전략 종목 (스위치)</label>
+              <label className="control-label">전략 종목</label>
               <select className="input" value={switchSymbol} onChange={e => setSwitchSymbol(e.target.value)}>
                 <option value="SOXL">SOXL</option>
                 <option value="TQQQ">TQQQ</option>
@@ -244,8 +244,9 @@ export default function QldComparePage() {
             <div className="control-group">
               <label className="control-label">비교 대상 (보유)</label>
               <select className="input" value={compareSymbol} onChange={e => setCompareSymbol(e.target.value)}>
-                <option value="QLD">QLD (2× QQQ)</option>
                 <option value="QQQ">QQQ</option>
+                <option value="QLD">QLD (2× QQQ)</option>
+                <option value="TQQQ">TQQQ (3× QQQ)</option>
                 <option value="SPY">SPY (S&amp;P 500)</option>
               </select>
             </div>
